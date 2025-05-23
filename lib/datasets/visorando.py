@@ -15,10 +15,15 @@ from torch.nn import functional as F
 
 from .base_dataset import BaseDataset
 
-class RoadDataset(BaseDataset):
+class Visorando(BaseDataset):
     def __init__(self,
                  root,
                  list_path,
+                 num_classes,
+                 multi_scale,
+                 flip,
+                 downsample_rate,
+                 scale_factor,
                  num_samples=None,
                  ignore_label=-1,
                  base_size=1024,
@@ -27,12 +32,12 @@ class RoadDataset(BaseDataset):
                  std=[0.229,0.224,0.225]):
 
         # on passe NUM_CLASSES=2
-        super(RoadDataset, self).__init__(
+        super(Visorando, self).__init__(
             ignore_label, base_size, crop_size,
             downsample_rate=1, scale_factor=16,
             mean=mean, std=std
         )
-
+        self.list_path = list_path
         self.root = root
         self.img_list = [l.strip().split() for l in open(root + list_path)]
         self.files = self.read_files()
