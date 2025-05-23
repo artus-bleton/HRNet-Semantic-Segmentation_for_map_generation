@@ -15,6 +15,10 @@ from torch.nn import functional as F
 
 from .base_dataset import BaseDataset
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+
 class Visorando(BaseDataset):
     def __init__(self,
                  root,
@@ -37,6 +41,7 @@ class Visorando(BaseDataset):
             downsample_rate=1, scale_factor=16,
             mean=mean, std=std
         )
+
         self.list_path = list_path
         self.root = root
         self.img_list = [l.strip().split() for l in open(root + list_path)]
@@ -53,7 +58,7 @@ class Visorando(BaseDataset):
         }
 
         # poids optionnels, ici uniformes
-        self.class_weights = torch.FloatTensor([1.0, 1.0]).cuda()
+        self.class_weights = torch.FloatTensor([1.0, 1.0]).to(device)
 
         self.multi_scale = False
         self.flip = False
@@ -127,7 +132,7 @@ class Visorando(BaseDataset):
         stride_h = np.int(self.crop_size[0] * 1.0)
         stride_w = np.int(self.crop_size[1] * 1.0)
         final_pred = torch.zeros([1, self.num_classes,
-                                    ori_height,ori_width]).cuda()
+                                    ori_height,ori_width]).to(device)
         for scale in scales:
             new_img = self.multi_scale_aug(image=image,
                                            rand_scale=scale,
@@ -147,8 +152,8 @@ class Visorando(BaseDataset):
                 cols = np.int(np.ceil(1.0 * (new_w -
                                 self.crop_size[1]) / stride_w)) + 1
                 preds = torch.zeros([1, self.num_classes,
-                                           new_h,new_w]).cuda()
-                count = torch.zeros([1,1, new_h, new_w]).cuda()
+                                           new_h,new_w]).to(device)
+                count = torch.zeros([1,1, new_h, new_w]).to(device)
 
                 for r in range(rows):
                     for c in range(cols):

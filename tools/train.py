@@ -33,15 +33,17 @@ from core.function import train, validate
 from utils.modelsummary import get_model_summary
 from utils.utils import create_logger, FullModel
 
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Train segmentation network')
-    
+
     parser.add_argument('--cfg',
                         help='experiment configure file name',
                         required=True,
                         type=str)
     parser.add_argument('--seed', type=int, default=304)
-    parser.add_argument("--local_rank", type=int, default=-1)       
+    parser.add_argument("--local_rank", type=int, default=-1)
     parser.add_argument('opts',
                         help="Modify config options using the command-line",
                         default=None,
@@ -61,13 +63,17 @@ def get_sampler(dataset):
         return None
 
 def main():
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
     args = parse_args()
 
     if args.seed > 0:
         import random
         print('Seeding with', args.seed)
         random.seed(args.seed)
-        torch.manual_seed(args.seed)        
+        torch.manual_seed(args.seed)
 
     logger, final_output_dir, tb_log_dir = create_logger(
         config, args.cfg, 'train')
@@ -88,11 +94,11 @@ def main():
     gpus = list(config.GPUS)
     distributed = args.local_rank >= 0
     if distributed:
-        device = torch.device('cuda:{}'.format(args.local_rank))    
+        device = torch.device('cuda:{}'.format(args.local_rank))
         torch.cuda.set_device(device)
         torch.distributed.init_process_group(
             backend="nccl", init_method="env://",
-        )        
+        )
 
     # build model
     model = eval('models.'+config.MODEL.NAME +
@@ -101,7 +107,7 @@ def main():
     # dump_input = torch.rand(
     #     (1, 3, config.TRAIN.IMAGE_SIZE[1], config.TRAIN.IMAGE_SIZE[0])
     # )
-    # logger.info(get_model_summary(model.cuda(), dump_input.cuda()))
+    # logger.info(get_model_summary(model.to(device), dump_input.to(device)))
 
     # copy model file
     if distributed and args.local_rank == 0:
@@ -164,7 +170,7 @@ def main():
             pin_memory=True,
             drop_last=True,
             sampler=extra_train_sampler)
-        extra_epoch_iters = np.int(extra_train_dataset.__len__() / 
+        extra_epoch_iters = np.int(extra_train_dataset.__len__() /
                         config.TRAIN.BATCH_SIZE_PER_GPU / len(gpus))
 
 
@@ -179,7 +185,8 @@ def main():
                         ignore_label=config.TRAIN.IGNORE_LABEL,
                         base_size=config.TEST.BASE_SIZE,
                         crop_size=test_size,
-                        downsample_rate=1)
+                        downsample_rate=1,
+                        scale_factor=config.TRAIN.SCALE_FACTOR)
 
     test_sampler = get_sampler(test_dataset)
     testloader = torch.utils.data.DataLoader(
@@ -210,8 +217,8 @@ def main():
             output_device=args.local_rank
         )
     else:
-        model = nn.DataParallel(model, device_ids=gpus).cuda()
-    
+        model = nn.DataParallel(model, device_ids=gpus).to(device)
+
 
     # optimizer
     if config.TRAIN.OPTIMIZER == 'sgd':
@@ -241,9 +248,9 @@ def main():
     else:
         raise ValueError('Only Support SGD optimizer')
 
-    epoch_iters = np.int(train_dataset.__len__() / 
+    epoch_iters = int(train_dataset.__len__() /
                         config.TRAIN.BATCH_SIZE_PER_GPU / len(gpus))
-        
+
     best_mIoU = 0
     last_epoch = 0
     if config.TRAIN.RESUME:
@@ -254,7 +261,7 @@ def main():
             best_mIoU = checkpoint['best_mIoU']
             last_epoch = checkpoint['epoch']
             dct = checkpoint['state_dict']
-            
+
             model.module.model.load_state_dict({k.replace('model.', ''): v for k, v in checkpoint['state_dict'].items() if k.startswith('model.')})
             optimizer.load_state_dict(checkpoint['optimizer'])
             logger.info("=> loaded checkpoint (epoch {})"
@@ -266,27 +273,27 @@ def main():
     end_epoch = config.TRAIN.END_EPOCH + config.TRAIN.EXTRA_EPOCH
     num_iters = config.TRAIN.END_EPOCH * epoch_iters
     extra_iters = config.TRAIN.EXTRA_EPOCH * extra_epoch_iters
-    
+
     for epoch in range(last_epoch, end_epoch):
 
         current_trainloader = extra_trainloader if epoch >= config.TRAIN.END_EPOCH else trainloader
         if current_trainloader.sampler is not None and hasattr(current_trainloader.sampler, 'set_epoch'):
             current_trainloader.sampler.set_epoch(epoch)
 
-        # valid_loss, mean_IoU, IoU_array = validate(config, 
+        # valid_loss, mean_IoU, IoU_array = validate(config,
         #             testloader, model, writer_dict)
 
         if epoch >= config.TRAIN.END_EPOCH:
-            train(config, epoch-config.TRAIN.END_EPOCH, 
-                  config.TRAIN.EXTRA_EPOCH, extra_epoch_iters, 
-                  config.TRAIN.EXTRA_LR, extra_iters, 
+            train(config, epoch-config.TRAIN.END_EPOCH,
+                  config.TRAIN.EXTRA_EPOCH, extra_epoch_iters,
+                  config.TRAIN.EXTRA_LR, extra_iters,
                   extra_trainloader, optimizer, model, writer_dict)
         else:
-            train(config, epoch, config.TRAIN.END_EPOCH, 
+            train(config, epoch, config.TRAIN.END_EPOCH,
                   epoch_iters, config.TRAIN.LR, num_iters,
                   trainloader, optimizer, model, writer_dict)
 
-        valid_loss, mean_IoU, IoU_array = validate(config, 
+        valid_loss, mean_IoU, IoU_array = validate(config,
                     testloader, model, writer_dict)
 
         if args.local_rank <= 0:
