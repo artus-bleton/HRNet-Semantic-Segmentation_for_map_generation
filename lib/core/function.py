@@ -159,8 +159,8 @@ def validate(config, testloader, model, writer_dict):
     return ave_loss.average(), mean_IoU, IoU_array
 
 
-def testval(config, test_dataset, testloader, model,
-            sv_dir='', sv_pred=False):
+def testval(config, test_dataset, testloader, model, visualize=False, output_dir=None):
+
     model.eval()
     confusion_matrix = np.zeros(
         (config.DATASET.NUM_CLASSES, config.DATASET.NUM_CLASSES))
@@ -174,6 +174,22 @@ def testval(config, test_dataset, testloader, model,
                 image,
                 scales=config.TEST.SCALE_LIST,
                 flip=config.TEST.FLIP_TEST)
+
+            #pour la visualisation
+            if visualize:
+                import os
+                from PIL import Image
+                import torchvision.transforms.functional as TF
+
+                os.makedirs(os.path.join(output_dir, 'vis'), exist_ok=True)
+
+                image_vis = TF.to_pil_image(image[0].cpu())
+                pred_vis = test_dataset.convert_pred_to_color(pred[0].cpu().numpy())
+                pred_vis = TF.to_pil_image(pred_vis.astype(np.uint8))
+
+                blended = Image.blend(image_vis.convert("RGBA"), pred_vis.convert("RGBA"), alpha=0.5)
+                blended.save(os.path.join(output_dir, 'vis', f'{i:04d}.png'))
+
 
             if len(border_padding) > 0:
                 border_padding = border_padding[0]
