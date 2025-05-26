@@ -22,6 +22,10 @@ from utils.utils import adjust_learning_rate
 
 import utils.distributed as dist
 
+import os
+from PIL import Image
+import torchvision.transforms.functional as TF
+
 
 
 
@@ -177,9 +181,6 @@ def testval(config, test_dataset, testloader, model, visualize=False, output_dir
 
             #pour la visualisation
             if visualize:
-                import os
-                from PIL import Image
-                import torchvision.transforms.functional as TF
 
                 os.makedirs(os.path.join(output_dir, 'vis'), exist_ok=True)
 
