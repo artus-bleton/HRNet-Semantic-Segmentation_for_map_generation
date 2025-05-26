@@ -16,6 +16,7 @@ import timeit
 from pathlib import Path
 
 import numpy as np
+np.int = int
 
 import torch
 import torch.nn as nn
@@ -106,7 +107,8 @@ def main():
                         ignore_label=config.TRAIN.IGNORE_LABEL,
                         base_size=config.TEST.BASE_SIZE,
                         crop_size=test_size,
-                        downsample_rate=1)
+                        downsample_rate=1,
+			scale_factor=1)
 
     testloader = torch.utils.data.DataLoader(
         test_dataset,

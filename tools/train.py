@@ -16,6 +16,7 @@ import timeit
 from pathlib import Path
 
 import numpy as np
+np.int = int
 
 import torch
 import torch.nn as nn
