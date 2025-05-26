@@ -23,9 +23,11 @@ from utils.utils import adjust_learning_rate
 import utils.distributed as dist
 
 
+
+
 def reduce_tensor(inp):
     """
-    Reduce the loss from all processes so that 
+    Reduce the loss from all processes so that
     process with rank 0 has the averaged results.
     """
     world_size = dist.get_world_size()
@@ -40,6 +42,9 @@ def reduce_tensor(inp):
 def train(config, epoch, num_epoch, epoch_iters, base_lr,
           num_iters, trainloader, optimizer, model, writer_dict):
     # Training
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     model.train()
 
     batch_time = AverageMeter()
@@ -51,8 +56,8 @@ def train(config, epoch, num_epoch, epoch_iters, base_lr,
 
     for i_iter, batch in enumerate(trainloader, 0):
         images, labels, _, _ = batch
-        images = images.cuda()
-        labels = labels.long().cuda()
+        images = images.to(device)
+        labels = labels.long().to(device)
 
         losses, _ = model(images, labels)
         loss = losses.mean()
@@ -89,6 +94,10 @@ def train(config, epoch, num_epoch, epoch_iters, base_lr,
     writer_dict['train_global_steps'] = global_steps + 1
 
 def validate(config, testloader, model, writer_dict):
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
     model.eval()
     ave_loss = AverageMeter()
     nums = config.MODEL.NUM_OUTPUTS
@@ -98,8 +107,8 @@ def validate(config, testloader, model, writer_dict):
         for idx, batch in enumerate(testloader):
             image, label, _, _ = batch
             size = label.size()
-            image = image.cuda()
-            label = label.long().cuda()
+            image = image.to(device)
+            label = label.long().to(device)
 
             losses, pred = model(image, label)
             if not isinstance(pred, (list, tuple)):
@@ -129,7 +138,7 @@ def validate(config, testloader, model, writer_dict):
             ave_loss.update(reduced_loss.item())
 
     if dist.is_distributed():
-        confusion_matrix = torch.from_numpy(confusion_matrix).cuda()
+        confusion_matrix = torch.from_numpy(confusion_matrix).to(device)
         reduced_confusion_matrix = reduce_tensor(confusion_matrix)
         confusion_matrix = reduced_confusion_matrix.cpu().numpy()
 

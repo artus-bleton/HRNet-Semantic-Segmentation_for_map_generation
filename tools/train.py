@@ -137,6 +137,7 @@ def main():
                         downsample_rate=config.TRAIN.DOWNSAMPLERATE,
                         scale_factor=config.TRAIN.SCALE_FACTOR)
 
+
     train_sampler = get_sampler(train_dataset)
     trainloader = torch.utils.data.DataLoader(
         train_dataset,
