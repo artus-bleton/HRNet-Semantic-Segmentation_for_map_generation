@@ -61,6 +61,19 @@ _C.DATASET.NUM_CLASSES = 19
 _C.DATASET.TRAIN_SET = 'list/cityscapes/train.lst'
 _C.DATASET.EXTRA_TRAIN_SET = ''
 _C.DATASET.TEST_SET = 'list/cityscapes/val.lst'
+_C.DATASET.IGNORE_LABEL = -1
+_C.DATASET.DOWNSAMPLE_RATE = 1
+_C.DATASET.BASE_SIZE = 1024
+_C.DATASET.CROP_SIZE = [320, 320]
+_C.DATASET.SCALE_FACTOR = 16
+_C.DATASET.FLIP = True
+_C.DATASET.MULTI_SCALE = True
+_C.DATASET.AUTO_WEIGHT = True
+_C.DATASET.AUTO_STATS = True
+_C.DATASET.MEAN = [0.5, 0.5, 0.5]
+_C.DATASET.STD = [0.5, 0.5, 0.5]
+_C.DATASET.NUM_SAMPLES = None
+
 
 # training
 _C.TRAIN = CN()
@@ -130,7 +143,7 @@ _C.DEBUG.SAVE_HEATMAPS_PRED = False
 
 def update_config(cfg, args):
     cfg.defrost()
-    
+
     cfg.merge_from_file(args.cfg)
     cfg.merge_from_list(args.opts)
 
@@ -141,4 +154,3 @@ if __name__ == '__main__':
     import sys
     with open(sys.argv[1], 'w') as f:
         print(_C, file=f)
-

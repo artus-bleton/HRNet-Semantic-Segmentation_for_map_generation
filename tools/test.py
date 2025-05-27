@@ -124,8 +124,8 @@ def main():
             test_dataset,
             testloader,
             model,
-            visualize=True,
-            output_dir=final_output_dir
+            sv_dir=final_output_dir,
+            sv_pred=True
         )
 
 

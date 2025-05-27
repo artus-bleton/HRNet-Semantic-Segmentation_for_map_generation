@@ -125,18 +125,24 @@ def main():
 
     # prepare data
     crop_size = (config.TRAIN.IMAGE_SIZE[1], config.TRAIN.IMAGE_SIZE[0])
-    train_dataset = eval('datasets.'+config.DATASET.DATASET)(
-                        root=config.DATASET.ROOT,
-                        list_path=config.DATASET.TRAIN_SET,
-                        num_samples=None,
-                        num_classes=config.DATASET.NUM_CLASSES,
-                        multi_scale=config.TRAIN.MULTI_SCALE,
-                        flip=config.TRAIN.FLIP,
-                        ignore_label=config.TRAIN.IGNORE_LABEL,
-                        base_size=config.TRAIN.BASE_SIZE,
-                        crop_size=crop_size,
-                        downsample_rate=config.TRAIN.DOWNSAMPLERATE,
-                        scale_factor=config.TRAIN.SCALE_FACTOR)
+    train_dataset = eval('datasets.' + config.DATASET.DATASET)(
+        root=config.DATASET.ROOT,
+        list_path=config.DATASET.TRAIN_SET,
+        num_classes=config.DATASET.NUM_CLASSES,
+        multi_scale=config.TRAIN.MULTI_SCALE,
+        flip=config.TRAIN.FLIP,
+        downsample_rate=config.DATASET.DOWNSAMPLE_RATE,
+        scale_factor=config.DATASET.SCALE_FACTOR,
+        num_samples=config.DATASET.NUM_SAMPLES,
+        ignore_label=config.DATASET.IGNORE_LABEL,
+        base_size=config.DATASET.BASE_SIZE,
+        crop_size=tuple(config.DATASET.CROP_SIZE),
+        mean=config.DATASET.MEAN,
+        std=config.DATASET.STD,
+        auto_weight=config.DATASET.AUTO_WEIGHT,
+        auto_stats=config.DATASET.AUTO_STATS
+    )
+
 
 
     train_sampler = get_sampler(train_dataset)
@@ -163,6 +169,7 @@ def main():
                     crop_size=crop_size,
                     downsample_rate=config.TRAIN.DOWNSAMPLERATE,
                     scale_factor=config.TRAIN.SCALE_FACTOR)
+
         extra_train_sampler = get_sampler(extra_train_dataset)
         extra_trainloader = torch.utils.data.DataLoader(
             extra_train_dataset,
@@ -177,18 +184,24 @@ def main():
 
 
     test_size = (config.TEST.IMAGE_SIZE[1], config.TEST.IMAGE_SIZE[0])
-    test_dataset = eval('datasets.'+config.DATASET.DATASET)(
-                        root=config.DATASET.ROOT,
-                        list_path=config.DATASET.TEST_SET,
-                        num_samples=config.TEST.NUM_SAMPLES,
-                        num_classes=config.DATASET.NUM_CLASSES,
-                        multi_scale=False,
-                        flip=False,
-                        ignore_label=config.TRAIN.IGNORE_LABEL,
-                        base_size=config.TEST.BASE_SIZE,
-                        crop_size=test_size,
-                        downsample_rate=1,
-                        scale_factor=config.TRAIN.SCALE_FACTOR)
+    test_dataset = eval('datasets.' + config.DATASET.DATASET)(
+        root=config.DATASET.ROOT,
+        list_path=config.DATASET.TEST_SET,
+        num_classes=config.DATASET.NUM_CLASSES,
+        multi_scale=False,
+        flip=False,
+        downsample_rate=config.DATASET.DOWNSAMPLE_RATE,
+        scale_factor=config.DATASET.SCALE_FACTOR,
+        num_samples=config.TEST.NUM_SAMPLES,
+        ignore_label=config.DATASET.IGNORE_LABEL,
+        base_size=config.TEST.BASE_SIZE,
+        crop_size=tuple(config.TEST.IMAGE_SIZE),
+        mean=config.DATASET.MEAN,
+        std=config.DATASET.STD,
+        auto_weight=config.DATASET.AUTO_WEIGHT,
+        auto_stats=config.DATASET.AUTO_STATS
+    )
+
 
     test_sampler = get_sampler(test_dataset)
     testloader = torch.utils.data.DataLoader(
