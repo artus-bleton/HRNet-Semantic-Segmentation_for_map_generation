@@ -29,7 +29,7 @@ import models
 import datasets
 from config import config
 from config import update_config
-from core.criterion import CrossEntropy, OhemCrossEntropy
+from core.criterion import CrossEntropy, OhemCrossEntropy, DiceLoss, TolerantDiceLoss
 from core.function import train, validate
 from utils.modelsummary import get_model_summary
 from utils.utils import create_logger, FullModel
@@ -200,14 +200,35 @@ def main():
         sampler=test_sampler)
 
     # criterion
-    if config.LOSS.USE_OHEM:
-        criterion = OhemCrossEntropy(ignore_label=config.TRAIN.IGNORE_LABEL,
-                                        thres=config.LOSS.OHEMTHRES,
-                                        min_kept=config.LOSS.OHEMKEEP,
-                                        weight=train_dataset.class_weights)
+    if config.LOSS.TYPE == 'ohem':
+        criterion = OhemCrossEntropy(
+            ignore_label=config.TRAIN.IGNORE_LABEL,
+            thres=config.LOSS.OHEMTHRES,
+            min_kept=config.LOSS.OHEMKEEP,
+            weight=train_dataset.class_weights
+        )
+
+    elif config.LOSS.TYPE == 'cross_entropy':
+        criterion = CrossEntropy(
+            ignore_label=config.TRAIN.IGNORE_LABEL,
+            weight=train_dataset.class_weights
+        )
+
+    elif config.LOSS.TYPE == 'dice':
+        criterion = DiceLoss(
+            ignore_label=config.TRAIN.IGNORE_LABEL,
+            smooth=1.0
+        )
+
+    elif config.LOSS.TYPE == 'tolerant_dice':
+        criterion = TolerantDiceLoss(
+            ignore_label=config.TRAIN.IGNORE_LABEL,
+            kernel_size=3, ## Pour une tolerance de translation avec une convolution de 3
+            smooth=1.0
+        )
     else:
-        criterion = CrossEntropy(ignore_label=config.TRAIN.IGNORE_LABEL,
-                                    weight=train_dataset.class_weights)
+        raise ValueError(f"Unknown loss type: {config.LOSS.TYPE}")
+
 
     model = FullModel(model, criterion)
     if distributed:
