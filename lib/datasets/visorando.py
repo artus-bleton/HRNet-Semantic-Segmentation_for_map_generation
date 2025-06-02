@@ -21,24 +21,26 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Visorando(BaseDataset):
     def __init__(self,
-                 root,
-                 list_path,
-                 num_classes,
-                 multi_scale,
-                 flip,
-                 downsample_rate,
-                 scale_factor,
-                 num_samples=None,
-                 ignore_label=-1,
-                 base_size=1024,
-                 crop_size=(512,512),
-                 mean=[0.485,0.456,0.406],
-                 std=[0.229,0.224,0.225]):
+                root="data",
+                list_path= "list/visorando",
+                num_classes=2,
+                multi_scale=True,
+                flip = True,
+                downsample_rate = 1,
+                scale_factor=16,
+                num_samples=None,
+                ignore_label=-1,
+                base_size=1024,
+                crop_size=(512,512),
+                mean=[0.5,0.5,0.5],
+                std=[0.5,0.5,0.5],
+                auto_weight = False,
+                auto_stats = False):
 
         # on passe NUM_CLASSES=2
         super(Visorando, self).__init__(
             ignore_label, base_size, crop_size,
-            downsample_rate=1, scale_factor=16,
+            downsample_rate=downsample_rate, scale_factor=scale_factor,
             mean=mean, std=std
         )
 
@@ -46,22 +48,32 @@ class Visorando(BaseDataset):
         self.root = root
         self.img_list = [l.strip().split() for l in open(root + list_path)]
         self.files = self.read_files()
+
+
+
         if num_samples:
             self.files = self.files[:num_samples]
 
-        self.num_classes = 2
+        self.num_classes = num_classes
 
         # on mappe 1→1 (route), 255→0 (sol/modèle négatif)
         self.label_mapping = {
-            1: 1,
+            0: 1,
             255: 0
         }
 
         # poids optionnels, ici uniformes
         self.class_weights = torch.FloatTensor([1.0, 1.0]).to(device)
 
-        self.multi_scale = False
+        self.multi_scale = multi_scale
         self.flip = False
+
+        if auto_weight:
+            self.compute_class_weights()
+
+        if auto_stats:
+            self.compute_mean_std()
+
 
 
     def read_files(self):
@@ -88,7 +100,7 @@ class Visorando(BaseDataset):
 
     def convert_label(self, label, inverse=False):
         temp = label.copy()
-        out = np.zeros_like(temp, dtype=np.int64)
+        out = np.zeros_like(temp, dtype=np.uint8)
         if not inverse:
             for src, dst in self.label_mapping.items():
                 out[temp == src] = dst
@@ -204,3 +216,77 @@ class Visorando(BaseDataset):
             save_img = Image.fromarray(pred)
             save_img.putpalette(palette)
             save_img.save(os.path.join(sv_path, name[i]+'.png'))
+
+    def convert_pred_to_color(self, pred):
+        """
+        Convertit une prédiction (H, W) en image couleur RGB (3, H, W)
+        Classe 0 : noir (fond), Classe 1 : vert (chemin)
+        """
+        if pred.ndim == 3:
+            pred = pred.squeeze(0)
+
+        palette = {
+            0: [0, 0, 0],     # fond : noir
+            1: [0, 255, 0],   # chemin : vert
+        }
+
+        h, w = pred.shape
+        color_image = np.zeros((3, h, w), dtype=np.uint8)
+        for class_id, color in palette.items():
+            mask = pred == class_id
+            for i in range(3):  # R, G, B
+                color_image[i][mask] = color[i]
+        return color_image
+
+    def compute_class_weights(self):
+        class_counts = np.zeros(self.num_classes, dtype=np.int64)
+
+        print("📊 Calcul des pixels moyens par classe...")
+        for item in self.files:
+            label_path = os.path.join(self.root, item["label"])
+            label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
+            label = self.convert_label(label)
+
+            for cls in range(self.num_classes):
+                class_counts[cls] += np.sum(label == cls)
+
+        total_pixels = np.sum(class_counts)
+        mean_pixels_per_class = class_counts / len(self.files)
+
+        print("Nombre moyen de pixels par classe :")
+        for cls in range(self.num_classes):
+            print(f"  Classe {cls} : {mean_pixels_per_class[cls]:.2f} pixels")
+
+        # Optionnel : calcul des poids inverses des fréquences
+        class_freq = class_counts / total_pixels
+        weights = 1.0 / (class_freq + 1e-6)
+        weights = weights / np.sum(weights)
+
+        self.class_weights = torch.FloatTensor(weights).to(device)
+        print(f"Poids calculés : {self.class_weights}")
+
+
+
+    def compute_mean_std(self):
+        print("Calcul de la moyenne et de l'écart-type...")
+        channel_sum = np.zeros(3)
+        channel_squared_sum = np.zeros(3)
+        pixel_count = 0
+
+        for item in self.files:
+            img_path = os.path.join(self.root, item["img"])
+            img = cv2.imread(img_path, cv2.IMREAD_COLOR).astype(np.float32) / 255.0
+            img = img[:, :, ::-1]  # BGR -> RGB
+
+            channel_sum += img.reshape(-1, 3).sum(axis=0)
+            channel_squared_sum += (img.reshape(-1, 3) ** 2).sum(axis=0)
+            pixel_count += img.shape[0] * img.shape[1]
+
+        mean = channel_sum / pixel_count
+        std = np.sqrt(channel_squared_sum / pixel_count - mean ** 2)
+
+        print(f"Mean: {mean}")
+        print(f"Std: {std}")
+
+        self.mean = mean.tolist()
+        self.std = std.tolist()
