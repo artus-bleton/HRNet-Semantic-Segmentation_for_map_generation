@@ -180,11 +180,6 @@ def testval(config, test_dataset, testloader, model,
                 flip=config.TEST.FLIP_TEST)
 
 
-            print("pred : ", pred.size())
-
-
-
-
             if len(border_padding) > 0:
                 border_padding = border_padding[0]
                 pred = pred[:, :, 0:pred.size(2) - border_padding[0], 0:pred.size(3) - border_padding[1]]

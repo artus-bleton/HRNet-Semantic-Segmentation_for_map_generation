@@ -56,17 +56,17 @@ class Visorando(BaseDataset):
 
         self.num_classes = num_classes
 
-        # on mappe 1→1 (route), 255→0 (sol/modèle négatif)
+
         self.label_mapping = {
-            0: 1,
-            255: 0
+            0: 0,    #fond
+            254: 1   #chemin
         }
 
         # poids optionnels, ici uniformes
         self.class_weights = torch.FloatTensor([1.0, 1.0]).to(device)
 
         self.multi_scale = multi_scale
-        self.flip = False
+        self.flip = flip
 
         if auto_weight:
             self.compute_class_weights()
@@ -130,7 +130,17 @@ class Visorando(BaseDataset):
         #                    cv2.IMREAD_GRAYSCALE)
         label = cv2.imread(os.path.join(self.root, item["label"]),
                            cv2.IMREAD_GRAYSCALE)
+
+
+        #debug -----
+        raw_label = cv2.imread(os.path.join(self.root, item["label"]),
+                                       cv2.IMREAD_GRAYSCALE)
+        #print(f"[DEBUG] '{name}' - valeurs brutes :", np.unique(raw_label))
+                #-----
         label = self.convert_label(label)
+
+        # 🧪 Debug pour vérifier que les classes 0 et 1 existent après mapping
+        #print(f"[DEBUG] '{name}' - uniques dans label après mapping :", np.unique(label))
 
         image, label = self.gen_sample(image, label,
                                 self.multi_scale, self.flip)
@@ -211,11 +221,18 @@ class Visorando(BaseDataset):
     def save_pred(self, preds, sv_path, name):
         palette = self.get_palette(256)
         preds = np.asarray(np.argmax(preds.cpu(), axis=1), dtype=np.uint8)
+        print("Unique values after convert_label:", np.unique(preds))
+
+
         for i in range(preds.shape[0]):
             pred = self.convert_label(preds[i], inverse=True)
+            print("Unique classes in pred[{}]:".format(i), np.unique(preds[i]))
+
             save_img = Image.fromarray(pred)
             save_img.putpalette(palette)
             save_img.save(os.path.join(sv_path, name[i]+'.png'))
+
+
 
     def convert_pred_to_color(self, pred):
         """

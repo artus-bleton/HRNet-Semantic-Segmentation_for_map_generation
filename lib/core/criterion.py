@@ -154,10 +154,11 @@ class TolerantDiceLoss(nn.Module):
 
 
 class DiceLoss(nn.Module):
-    def __init__(self, ignore_label=-1, smooth=1.0):
+    def __init__(self, weight, ignore_label=-1, smooth=1.0):
         super(DiceLoss, self).__init__()
         self.ignore_label = ignore_label
         self.smooth = smooth
+        self.weight = weight
 
     def _forward(self, score, target):
         ph, pw = score.size(2), score.size(3)
@@ -170,6 +171,8 @@ class DiceLoss(nn.Module):
         # Softmax et extraction de la classe "chemin" (supposée en index 1)
         probs = F.softmax(score, dim=1)
         probs_fg = probs[:, 1, :, :]  # classe "chemin"
+        #print(f"[DEBUG] probs_fg min: {probs_fg.min().item():.4f}, max: {probs_fg.max().item():.4f}")
+
         target_fg = (target == 1).float()
 
         # Masque d'exclusion des pixels ignorés
@@ -190,10 +193,10 @@ class DiceLoss(nn.Module):
         if config.MODEL.NUM_OUTPUTS == 1:
             score = [score]
 
-        weights = config.LOSS.BALANCE_WEIGHTS
-        assert len(weights) == len(score)
 
-        return sum([w * self._forward(x, target) for (w, x) in zip(weights, score)])
+        assert len(self.weight) == len(score)
+
+        return sum([w * self._forward(x, target) for (w, x) in zip(self.weight, score)])
 
 class DistanceAwareDiceLoss(nn.Module):
     def __init__(self, ignore_label=-1, smooth=1.0, lambda_distance=1.0):

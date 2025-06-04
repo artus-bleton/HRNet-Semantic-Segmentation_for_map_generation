@@ -76,6 +76,7 @@ def main():
 
     if config.TEST.MODEL_FILE:
         model_state_file = config.TEST.MODEL_FILE
+
     else:
         model_state_file = os.path.join(final_output_dir, 'final_state.pth')
     logger.info('=> loading model from {}'.format(model_state_file))
@@ -102,12 +103,12 @@ def main():
                         list_path=config.DATASET.TEST_SET,
                         num_samples=None,
                         num_classes=config.DATASET.NUM_CLASSES,
-                        multi_scale=False,
-                        flip=False,
+                        multi_scale=config.DATASET.MULTI_SCALE,
+                        flip=config.DATASET.FLIP,
                         ignore_label=config.TRAIN.IGNORE_LABEL,
                         base_size=config.TEST.BASE_SIZE,
                         crop_size=test_size,
-                        downsample_rate=1,
+                        downsample_rate=config.TEST.DOWNSAMPLE_RATE,
                         scale_factor=1)
 
     testloader = torch.utils.data.DataLoader(

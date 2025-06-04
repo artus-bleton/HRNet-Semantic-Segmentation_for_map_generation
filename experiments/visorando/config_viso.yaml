@@ -64,10 +64,8 @@ MODEL:
             FUSE_METHOD: SUM
 
 LOSS:
-    USE_OHEM: false
-    OHEMTHRES: 0.9
-    OHEMKEEP: 131072
-    BALANCE_WEIGHTS: [1, 1]
+    TYPE: dice
+    BALANCE_WEIGHTS: [0.4, 1]
 
 TRAIN:
     IMAGE_SIZE: [320, 320]

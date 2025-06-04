@@ -218,7 +218,7 @@ def main():
             ignore_label=config.TRAIN.IGNORE_LABEL,
             thres=config.LOSS.OHEMTHRES,
             min_kept=config.LOSS.OHEMKEEP,
-            weight=train_dataset.class_weights
+            weight=[train_dataset.class_weights]
         )
 
     elif config.LOSS.TYPE == 'cross_entropy':
@@ -230,7 +230,8 @@ def main():
     elif config.LOSS.TYPE == 'dice':
         criterion = DiceLoss(
             ignore_label=config.TRAIN.IGNORE_LABEL,
-            smooth=1.0
+            smooth=1.0,
+            weight=config.LOSS.BALANCE_WEIGHTS
         )
 
     elif config.LOSS.TYPE == 'tolerant_dice':
