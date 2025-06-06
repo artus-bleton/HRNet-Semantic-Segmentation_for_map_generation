@@ -98,18 +98,25 @@ def main():
 
     # prepare data
     test_size = (config.TEST.IMAGE_SIZE[1], config.TEST.IMAGE_SIZE[0])
-    test_dataset = eval('datasets.'+config.DATASET.DATASET)(
-                        root=config.DATASET.ROOT,
-                        list_path=config.DATASET.TEST_SET,
-                        num_samples=None,
-                        num_classes=config.DATASET.NUM_CLASSES,
-                        multi_scale=config.DATASET.MULTI_SCALE,
-                        flip=config.DATASET.FLIP,
-                        ignore_label=config.TRAIN.IGNORE_LABEL,
-                        base_size=config.TEST.BASE_SIZE,
-                        crop_size=test_size,
-                        downsample_rate=config.TEST.DOWNSAMPLE_RATE,
-                        scale_factor=1)
+    test_dataset = eval('datasets.' + config.DATASET.DATASET)(
+        root=config.DATASET.ROOT,
+        list_path=config.DATASET.TEST_SET,
+        num_classes=config.DATASET.NUM_CLASSES,
+        multi_scale=config.TRAIN.MULTI_SCALE,
+        flip=config.TRAIN.FLIP,
+        downsample_rate=config.DATASET.DOWNSAMPLE_RATE,
+        scale_factor=config.DATASET.SCALE_FACTOR,
+        num_samples=config.DATASET.NUM_SAMPLES,
+        ignore_label=config.DATASET.IGNORE_LABEL,
+        base_size=config.DATASET.BASE_SIZE,
+        crop_size=tuple(config.DATASET.CROP_SIZE),
+        mean=config.DATASET.MEAN,
+        std=config.DATASET.STD,
+        auto_weight=config.DATASET.AUTO_WEIGHT,
+        auto_stats=config.DATASET.AUTO_STATS
+    )
+
+    print("test")
 
     testloader = torch.utils.data.DataLoader(
         test_dataset,
@@ -128,8 +135,6 @@ def main():
             sv_dir=final_output_dir,
             sv_pred=True
         )
-
-
         msg = 'MeanIU: {: 4.4f}, Pixel_Acc: {: 4.4f}, \
             Mean_Acc: {: 4.4f}, Class IoU: '.format(mean_IoU,
             pixel_acc, mean_acc)

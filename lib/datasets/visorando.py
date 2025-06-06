@@ -18,7 +18,6 @@ from .base_dataset import BaseDataset
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-
 class Visorando(BaseDataset):
     def __init__(self,
                 root="data",
@@ -114,93 +113,46 @@ class Visorando(BaseDataset):
     def __getitem__(self, index):
         item = self.files[index]
         name = item["name"]
-        # image = cv2.imread(os.path.join(self.root,'cityscapes',item["img"]),
-        #                    cv2.IMREAD_COLOR)
+
         image = cv2.imread(os.path.join(self.root, item["img"]),
                            cv2.IMREAD_COLOR)
+
+        # print(f"[DEBUG] __getitem__ : '{item['name']}'")
+        # print(f"  path   : {os.path.join(self.root, item['img'])}")
+        # print(f"  dtype  : {image.dtype}")
+        # print(f"  shape  : {image.shape}")
+        # print(f"  min    : {image.min()}, max: {image.max()}, mean: {image.mean():.2f}, std: {image.std():.2f}")
+
+
         size = image.shape
 
         if 'test' in self.list_path:
             image = self.input_transform(image)
             image = image.transpose((2, 0, 1))
-
             return image.copy(), np.array(size), name
 
-        # label = cv2.imread(os.path.join(self.root,'cityscapes',item["label"]),
-        #                    cv2.IMREAD_GRAYSCALE)
         label = cv2.imread(os.path.join(self.root, item["label"]),
                            cv2.IMREAD_GRAYSCALE)
 
-
-        #debug -----
         raw_label = cv2.imread(os.path.join(self.root, item["label"]),
-                                       cv2.IMREAD_GRAYSCALE)
-        #print(f"[DEBUG] '{name}' - valeurs brutes :", np.unique(raw_label))
-                #-----
+                               cv2.IMREAD_GRAYSCALE)
+
         label = self.convert_label(label)
 
-        # 🧪 Debug pour vérifier que les classes 0 et 1 existent après mapping
-        #print(f"[DEBUG] '{name}' - uniques dans label après mapping :", np.unique(label))
 
-        image, label = self.gen_sample(image, label,
-                                self.multi_scale, self.flip)
+
+        image, label = self.gen_sample(image, label)
+
+        # print(f"[DEBUG] __getitem__ (après gen_sample) : '{item['name']}'")
+        # print(f"  path   : {os.path.join(self.root, item['img'])}")
+        # print(f"  dtype  : {image.dtype}")
+        # print(f"  shape  : {image.shape}")
+        # print(f"  min    : {image.min()}, max: {image.max()}, mean: {image.mean():.2f}, std: {image.std():.2f}")
+
 
         return image.copy(), label.copy(), np.array(size), name
 
-    def multi_scale_inference(self, config, model, image, scales=[1], flip=False):
-        batch, _, ori_height, ori_width = image.size()
-        assert batch == 1, "only supporting batchsize 1."
-        image = image.numpy()[0].transpose((1,2,0)).copy()
-        stride_h = np.int(self.crop_size[0] * 1.0)
-        stride_w = np.int(self.crop_size[1] * 1.0)
-        final_pred = torch.zeros([1, self.num_classes,
-                                    ori_height,ori_width]).to(device)
-        for scale in scales:
-            new_img = self.multi_scale_aug(image=image,
-                                           rand_scale=scale,
-                                           rand_crop=False)
-            height, width = new_img.shape[:-1]
 
-            if scale <= 1.0:
-                new_img = new_img.transpose((2, 0, 1))
-                new_img = np.expand_dims(new_img, axis=0)
-                new_img = torch.from_numpy(new_img)
-                preds = self.inference(config, model, new_img, flip)
-                preds = preds[:, :, 0:height, 0:width]
-            else:
-                new_h, new_w = new_img.shape[:-1]
-                rows = np.int(np.ceil(1.0 * (new_h -
-                                self.crop_size[0]) / stride_h)) + 1
-                cols = np.int(np.ceil(1.0 * (new_w -
-                                self.crop_size[1]) / stride_w)) + 1
-                preds = torch.zeros([1, self.num_classes,
-                                           new_h,new_w]).to(device)
-                count = torch.zeros([1,1, new_h, new_w]).to(device)
-
-                for r in range(rows):
-                    for c in range(cols):
-                        h0 = r * stride_h
-                        w0 = c * stride_w
-                        h1 = min(h0 + self.crop_size[0], new_h)
-                        w1 = min(w0 + self.crop_size[1], new_w)
-                        h0 = max(int(h1 - self.crop_size[0]), 0)
-                        w0 = max(int(w1 - self.crop_size[1]), 0)
-                        crop_img = new_img[h0:h1, w0:w1, :]
-                        crop_img = crop_img.transpose((2, 0, 1))
-                        crop_img = np.expand_dims(crop_img, axis=0)
-                        crop_img = torch.from_numpy(crop_img)
-                        pred = self.inference(config, model, crop_img, flip)
-                        preds[:,:,h0:h1,w0:w1] += pred[:,:, 0:h1-h0, 0:w1-w0]
-                        count[:,:,h0:h1,w0:w1] += 1
-                preds = preds / count
-                preds = preds[:,:,:height,:width]
-
-            preds = F.interpolate(
-                preds, (ori_height, ori_width),
-                mode='bilinear', align_corners=config.MODEL.ALIGN_CORNERS
-            )
-            final_pred += preds
-        return final_pred
 
     def get_palette(self, n):
         palette = [0] * (n * 3)
@@ -254,56 +206,3 @@ class Visorando(BaseDataset):
             for i in range(3):  # R, G, B
                 color_image[i][mask] = color[i]
         return color_image
-
-    def compute_class_weights(self):
-        class_counts = np.zeros(self.num_classes, dtype=np.int64)
-
-        print("📊 Calcul des pixels moyens par classe...")
-        for item in self.files:
-            label_path = os.path.join(self.root, item["label"])
-            label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
-            label = self.convert_label(label)
-
-            for cls in range(self.num_classes):
-                class_counts[cls] += np.sum(label == cls)
-
-        total_pixels = np.sum(class_counts)
-        mean_pixels_per_class = class_counts / len(self.files)
-
-        print("Nombre moyen de pixels par classe :")
-        for cls in range(self.num_classes):
-            print(f"  Classe {cls} : {mean_pixels_per_class[cls]:.2f} pixels")
-
-        # Optionnel : calcul des poids inverses des fréquences
-        class_freq = class_counts / total_pixels
-        weights = 1.0 / (class_freq + 1e-6)
-        weights = weights / np.sum(weights)
-
-        self.class_weights = torch.FloatTensor(weights).to(device)
-        print(f"Poids calculés : {self.class_weights}")
-
-
-
-    def compute_mean_std(self):
-        print("Calcul de la moyenne et de l'écart-type...")
-        channel_sum = np.zeros(3)
-        channel_squared_sum = np.zeros(3)
-        pixel_count = 0
-
-        for item in self.files:
-            img_path = os.path.join(self.root, item["img"])
-            img = cv2.imread(img_path, cv2.IMREAD_COLOR).astype(np.float32) / 255.0
-            img = img[:, :, ::-1]  # BGR -> RGB
-
-            channel_sum += img.reshape(-1, 3).sum(axis=0)
-            channel_squared_sum += (img.reshape(-1, 3) ** 2).sum(axis=0)
-            pixel_count += img.shape[0] * img.shape[1]
-
-        mean = channel_sum / pixel_count
-        std = np.sqrt(channel_squared_sum / pixel_count - mean ** 2)
-
-        print(f"Mean: {mean}")
-        print(f"Std: {std}")
-
-        self.mean = mean.tolist()
-        self.std = std.tolist()

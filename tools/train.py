@@ -29,7 +29,7 @@ import models
 import datasets
 from config import config
 from config import update_config
-from core.criterion import CrossEntropy, OhemCrossEntropy, DiceLoss, TolerantDiceLoss
+from core.criterion import CrossEntropy, OhemCrossEntropy, DiceLoss, HausdorffLoss, CombinedLoss
 from core.function import train, validate
 from utils.modelsummary import get_model_summary
 from utils.utils import create_logger, FullModel
@@ -234,11 +234,16 @@ def main():
             weight=config.LOSS.BALANCE_WEIGHTS
         )
 
-    elif config.LOSS.TYPE == 'tolerant_dice':
-        criterion = TolerantDiceLoss(
+    elif config.LOSS.TYPE == 'dice_haug':
+        criterion = CombinedLoss(
             ignore_label=config.TRAIN.IGNORE_LABEL,
-            kernel_size=3, ## Pour une tolerance de translation avec une convolution de 3
-            smooth=1.0
+            balance_weights=config.LOSS.BALANCE_WEIGHTS
+        )
+
+    elif config.LOSS.TYPE == 'haug':
+        criterion = HausdorffLoss(
+            ignore_label=config.TRAIN.IGNORE_LABEL,
+            weight=config.LOSS.BALANCE_WEIGHTS
         )
     else:
         raise ValueError(f"Unknown loss type: {config.LOSS.TYPE}")

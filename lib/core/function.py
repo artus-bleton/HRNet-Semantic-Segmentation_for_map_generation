@@ -45,25 +45,26 @@ def reduce_tensor(inp):
 
 def train(config, epoch, num_epoch, epoch_iters, base_lr,
           num_iters, trainloader, optimizer, model, writer_dict):
-    # Training
-
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
     model.train()
 
     batch_time = AverageMeter()
     ave_loss = AverageMeter()
     tic = time.time()
-    cur_iters = epoch*epoch_iters
+    cur_iters = epoch * epoch_iters
     writer = writer_dict['writer']
     global_steps = writer_dict['train_global_steps']
 
     for i_iter, batch in enumerate(trainloader, 0):
         images, labels, _, _ = batch
         images = images.to(device)
+
+
+
         labels = labels.long().to(device)
 
-        losses, _ = model(images, labels)
+        # Forward
+        losses, pred = model(images, labels)  # pred = logits [B, C, H, W]
         loss = losses.mean()
 
         if dist.is_distributed():
@@ -75,24 +76,40 @@ def train(config, epoch, num_epoch, epoch_iters, base_lr,
         loss.backward()
         optimizer.step()
 
-        # measure elapsed time
+        # Time and loss update
         batch_time.update(time.time() - tic)
         tic = time.time()
-
-        # update average loss
         ave_loss.update(reduced_loss.item())
 
-        lr = adjust_learning_rate(optimizer,
-                                  base_lr,
-                                  num_iters,
-                                  i_iter+cur_iters)
+        # Adjust LR
+        lr = adjust_learning_rate(optimizer, base_lr, num_iters, i_iter + cur_iters)
 
+        # Logging + DEBUG
         if i_iter % config.PRINT_FREQ == 0 and dist.get_rank() == 0:
-            msg = 'Epoch: [{}/{}] Iter:[{}/{}], Time: {:.2f}, ' \
-                  'lr: {}, Loss: {:.6f}' .format(
-                      epoch, num_epoch, i_iter, epoch_iters,
-                      batch_time.average(), [x['lr'] for x in optimizer.param_groups], ave_loss.average())
+            msg = f'Epoch: [{epoch}/{num_epoch}] Iter:[{i_iter}/{epoch_iters}], Time: {batch_time.average():.2f}, ' \
+                  f'lr: {[x["lr"] for x in optimizer.param_groups]}, Loss: {ave_loss.average():.6f}'
             logging.info(msg)
+
+            with torch.no_grad():
+                # --- LOGITS STATS PAR CLASSE ---
+                print("[DEBUG/function.py] -> pred (logits) stats :")
+                print("  shape        :", pred.shape)
+                print("  classe 0 - min :", pred[:, 0, :, :].min().item(),
+                    ", max :", pred[:, 0, :, :].max().item(),
+                    ", mean :", pred[:, 0, :, :].mean().item(),
+                    ", std :", pred[:, 0, :, :].std().item())
+                print("  classe 1 - min :", pred[:, 1, :, :].min().item(),
+                    ", max :", pred[:, 1, :, :].max().item(),
+                    ", mean :", pred[:, 1, :, :].mean().item(),
+                    ", std :", pred[:, 1, :, :].std().item())
+
+                unique_label, count_label = np.unique(labels.cpu().numpy(), return_counts=True)
+                print("[DEBUG/function.py] -> val in label :", dict(zip(unique_label, count_label)))
+
+                pred_classes = torch.argmax(pred, dim=1)
+                unique_pred, count_pred = np.unique(pred_classes.cpu().numpy(), return_counts=True)
+                print("[DEBUG/function.py] -> val in pred  :", dict(zip(unique_pred, count_pred)), "\n\n")
+
 
     writer.add_scalar('train_loss', ave_loss.average(), global_steps)
     writer_dict['train_global_steps'] = global_steps + 1
@@ -178,6 +195,30 @@ def testval(config, test_dataset, testloader, model,
                 image,
                 scales=config.TEST.SCALE_LIST,
                 flip=config.TEST.FLIP_TEST)
+
+            # --- LOGITS STATS PAR CLASSE ---
+            print("[DEBUG/function.py] -> pred (logits) stats :")
+            print("  shape        :", pred.shape)
+            print("  classe 0 - min :", pred[:, 0, :, :].min().item(),
+                  ", max :", pred[:, 0, :, :].max().item(),
+                  ", mean :", pred[:, 0, :, :].mean().item(),
+                  ", std :", pred[:, 0, :, :].std().item())
+            print("  classe 1 - min :", pred[:, 1, :, :].min().item(),
+                  ", max :", pred[:, 1, :, :].max().item(),
+                  ", mean :", pred[:, 1, :, :].mean().item(),
+                  ", std :", pred[:, 1, :, :].std().item())
+
+
+            # --- GROUND TRUTH LABEL ---
+            unique_label, count_label = np.unique(label.cpu().numpy(), return_counts=True)
+            print("[DEBUG/function.py] -> val in label :", dict(zip(unique_label, count_label)))
+
+            # --- PREDICTED CLASSES ---
+            pred_classes = torch.argmax(pred, dim=1)  # shape [B, H, W]
+            unique_pred, count_pred = np.unique(pred_classes.cpu().numpy(), return_counts=True)
+            print("[DEBUG/function.py] -> val in pred  :", dict(zip(unique_pred, count_pred)), "\n\n")
+
+
 
 
             if len(border_padding) > 0:

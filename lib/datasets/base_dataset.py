@@ -44,6 +44,7 @@ class BaseDataset(data.Dataset):
     def input_transform(self, image):
         image = image.astype(np.float32)[:, :, ::-1]
         image = image / 255.0
+
         image -= self.mean
         image /= self.std
         return image
@@ -108,7 +109,7 @@ class BaseDataset(data.Dataset):
             new_w = np.int(w * short_length / h + 0.5)
         else:
             new_w = short_length
-            new_h = np.int(h * short_length / w + 0.5)        
+            new_h = np.int(h * short_length / w + 0.5)
         image = cv2.resize(image, (new_w, new_h),
                            interpolation=cv2.INTER_LINEAR)
         pad_w, pad_h = 0, 0
@@ -116,7 +117,7 @@ class BaseDataset(data.Dataset):
             pad_w = 0 if (new_w % fit_stride == 0) else fit_stride - (new_w % fit_stride)
             pad_h = 0 if (new_h % fit_stride == 0) else fit_stride - (new_h % fit_stride)
             image = cv2.copyMakeBorder(
-                image, 0, pad_h, 0, pad_w, 
+                image, 0, pad_h, 0, pad_w,
                 cv2.BORDER_CONSTANT, value=tuple(x * 255 for x in self.mean[::-1])
             )
 
@@ -126,7 +127,7 @@ class BaseDataset(data.Dataset):
                 interpolation=cv2.INTER_NEAREST)
             if pad_h > 0 or pad_w > 0:
                 label = cv2.copyMakeBorder(
-                    label, 0, pad_h, 0, pad_w, 
+                    label, 0, pad_h, 0, pad_w,
                     cv2.BORDER_CONSTANT, value=self.ignore_label
                 )
             if return_padding:
@@ -137,7 +138,7 @@ class BaseDataset(data.Dataset):
             if return_padding:
                 return image, (pad_h, pad_w)
             else:
-                return image  
+                return image
 
     def random_brightness(self, img):
         if not config.TRAIN.RANDOM_BRIGHTNESS:
@@ -153,7 +154,7 @@ class BaseDataset(data.Dataset):
         return img
 
     def gen_sample(self, image, label,
-                   multi_scale=True, is_flip=True):
+                   multi_scale=False, is_flip=False):
         if multi_scale:
             rand_scale = 0.5 + random.randint(0, self.scale_factor) / 10.0
             image, label = self.multi_scale_aug(image, label,
@@ -171,6 +172,7 @@ class BaseDataset(data.Dataset):
             label = label[:, ::flip]
 
         if self.downsample_rate != 1:
+            print("jemefaisbaiserlecucu")
             label = cv2.resize(
                 label,
                 None,
@@ -281,4 +283,5 @@ class BaseDataset(data.Dataset):
                 mode='bilinear', align_corners=config.MODEL.ALIGN_CORNERS
             )
             final_pred += preds
+
         return final_pred
