@@ -29505,3 +29505,138 @@ Epoch: [0/200] Iter:[770/1517], Time: 0.20, lr: [0.0009977155965052514], Loss: 0
 [DEBUG/function.py] -> val in pred  : {0: 23559, 1: 2041} 
 
 
+=== Running : python3 tools/train.py --cfg experiments/visorando/config_viso_dice_new_dataset_batchsize4_lr1e-04.yaml --comp ===
+Traceback (most recent call last):
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 394, in <module>
+    main()
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 75, in main
+    args = parse_args()
+           ^^^^^^^^^^^^
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 58, in parse_args
+    update_config(config, args)
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/../lib/config/default.py", line 146, in update_config
+    cfg.merge_from_file(args.cfg)
+  File "/.conda/envs/bleton-visorando/lib/python3.12/site-packages/yacs/config.py", line 211, in merge_from_file
+    with open(cfg_filename, "r") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'experiments/visorando/config_viso_dice_new_dataset_batchsize4_lr1e-04.yaml'
+=== Running : python3 tools/train.py --cfg experiments/visorando/config_viso_dice_new_dataset_batchsize4_lr5e-04.yaml --comp ===
+Traceback (most recent call last):
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 394, in <module>
+    main()
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 75, in main
+    args = parse_args()
+           ^^^^^^^^^^^^
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 58, in parse_args
+    update_config(config, args)
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/../lib/config/default.py", line 146, in update_config
+    cfg.merge_from_file(args.cfg)
+  File "/.conda/envs/bleton-visorando/lib/python3.12/site-packages/yacs/config.py", line 211, in merge_from_file
+    with open(cfg_filename, "r") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'experiments/visorando/config_viso_dice_new_dataset_batchsize4_lr5e-04.yaml'
+=== Running : python3 tools/train.py --cfg experiments/visorando/config_viso_dice_new_dataset_batchsize4_lr1.0e-03.yaml --comp ===
+Traceback (most recent call last):
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 394, in <module>
+    main()
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 75, in main
+    args = parse_args()
+           ^^^^^^^^^^^^
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 58, in parse_args
+    update_config(config, args)
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/../lib/config/default.py", line 146, in update_config
+    cfg.merge_from_file(args.cfg)
+  File "/.conda/envs/bleton-visorando/lib/python3.12/site-packages/yacs/config.py", line 211, in merge_from_file
+    with open(cfg_filename, "r") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'experiments/visorando/config_viso_dice_new_dataset_batchsize4_lr1.0e-03.yaml'
+=== Running : python3 tools/train.py --cfg experiments/visorando/config_viso_dice_new_dataset_batchsize16_lr1e-04.yaml --comp ===
+Traceback (most recent call last):
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 394, in <module>
+    main()
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 75, in main
+    args = parse_args()
+           ^^^^^^^^^^^^
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 58, in parse_args
+    update_config(config, args)
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/../lib/config/default.py", line 146, in update_config
+    cfg.merge_from_file(args.cfg)
+  File "/.conda/envs/bleton-visorando/lib/python3.12/site-packages/yacs/config.py", line 211, in merge_from_file
+    with open(cfg_filename, "r") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'experiments/visorando/config_viso_dice_new_dataset_batchsize16_lr1e-04.yaml'
+=== Running : python3 tools/train.py --cfg experiments/visorando/config_viso_dice_new_dataset_batchsize16_lr5e-04.yaml --comp ===
+Traceback (most recent call last):
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 394, in <module>
+    main()
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 75, in main
+    args = parse_args()
+           ^^^^^^^^^^^^
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 58, in parse_args
+    update_config(config, args)
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/../lib/config/default.py", line 146, in update_config
+    cfg.merge_from_file(args.cfg)
+  File "/.conda/envs/bleton-visorando/lib/python3.12/site-packages/yacs/config.py", line 211, in merge_from_file
+    with open(cfg_filename, "r") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'experiments/visorando/config_viso_dice_new_dataset_batchsize16_lr5e-04.yaml'
+=== Running : python3 tools/train.py --cfg experiments/visorando/config_viso_dice_new_dataset_batchsize16_lr1.0e-03.yaml --comp ===
+Traceback (most recent call last):
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 394, in <module>
+    main()
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 75, in main
+    args = parse_args()
+           ^^^^^^^^^^^^
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 58, in parse_args
+    update_config(config, args)
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/../lib/config/default.py", line 146, in update_config
+    cfg.merge_from_file(args.cfg)
+  File "/.conda/envs/bleton-visorando/lib/python3.12/site-packages/yacs/config.py", line 211, in merge_from_file
+    with open(cfg_filename, "r") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'experiments/visorando/config_viso_dice_new_dataset_batchsize16_lr1.0e-03.yaml'
+=== Running : python3 tools/train.py --cfg experiments/visorando/config_viso_dice_new_dataset_batchsize32_lr1e-04.yaml --comp ===
+Traceback (most recent call last):
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 394, in <module>
+    main()
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 75, in main
+    args = parse_args()
+           ^^^^^^^^^^^^
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 58, in parse_args
+    update_config(config, args)
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/../lib/config/default.py", line 146, in update_config
+    cfg.merge_from_file(args.cfg)
+  File "/.conda/envs/bleton-visorando/lib/python3.12/site-packages/yacs/config.py", line 211, in merge_from_file
+    with open(cfg_filename, "r") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'experiments/visorando/config_viso_dice_new_dataset_batchsize32_lr1e-04.yaml'
+=== Running : python3 tools/train.py --cfg experiments/visorando/config_viso_dice_new_dataset_batchsize32_lr5e-04.yaml --comp ===
+Traceback (most recent call last):
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 394, in <module>
+    main()
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 75, in main
+    args = parse_args()
+           ^^^^^^^^^^^^
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 58, in parse_args
+    update_config(config, args)
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/../lib/config/default.py", line 146, in update_config
+    cfg.merge_from_file(args.cfg)
+  File "/.conda/envs/bleton-visorando/lib/python3.12/site-packages/yacs/config.py", line 211, in merge_from_file
+    with open(cfg_filename, "r") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'experiments/visorando/config_viso_dice_new_dataset_batchsize32_lr5e-04.yaml'
+=== Running : python3 tools/train.py --cfg experiments/visorando/config_viso_dice_new_dataset_batchsize32_lr1.0e-03.yaml --comp ===
+Traceback (most recent call last):
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 394, in <module>
+    main()
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 75, in main
+    args = parse_args()
+           ^^^^^^^^^^^^
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/train.py", line 58, in parse_args
+    update_config(config, args)
+  File "/home/bleton/viso_rando/HRNet-Semantic-Segmentation_for_map_generation/tools/../lib/config/default.py", line 146, in update_config
+    cfg.merge_from_file(args.cfg)
+  File "/.conda/envs/bleton-visorando/lib/python3.12/site-packages/yacs/config.py", line 211, in merge_from_file
+    with open(cfg_filename, "r") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'experiments/visorando/config_viso_dice_new_dataset_batchsize32_lr1.0e-03.yaml'

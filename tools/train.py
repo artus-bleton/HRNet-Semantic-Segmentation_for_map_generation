@@ -49,6 +49,10 @@ def parse_args():
                         help="Modify config options using the command-line",
                         default=None,
                         nargs=argparse.REMAINDER)
+    parser.add_argument('--comp',
+                        help="write all miou for all models with auto_train",
+                        action='store_true')
+
 
     args = parser.parse_args()
     update_config(config, args)
@@ -355,6 +359,25 @@ def main():
                         valid_loss, mean_IoU, best_mIoU)
             logging.info(msg)
             logging.info(IoU_array)
+
+    # === après la boucle ===
+
+    # Si --comp TRUE → on ajoute le résultat dans comp.txt
+    if args.local_rank <= 0 and args.comp.upper() == 'TRUE':
+        os.makedirs("comp_results", exist_ok=True)
+
+        # récupère le nom de la config yaml
+        config_name = os.path.basename(args.cfg)
+
+        # fichier global de log
+        result_file = "comp_results/comp.txt"
+
+        # on ajoute en mode "append"
+        with open(result_file, "a") as f:
+            f.write(f"{config_name} : best_mIoU : {best_mIoU:.4f}\n")
+
+        logging.info(f"✅ Appended best_mIoU to {result_file}")
+
 
     if args.local_rank <= 0:
 
