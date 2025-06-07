@@ -39,6 +39,7 @@ from utils.utils import create_logger, FullModel
 def parse_args():
     parser = argparse.ArgumentParser(description='Train segmentation network')
 
+
     parser.add_argument('--cfg',
                         help='experiment configure file name',
                         required=True,
@@ -130,21 +131,6 @@ def main():
     # prepare data
     crop_size = (config.TRAIN.IMAGE_SIZE[1], config.TRAIN.IMAGE_SIZE[0])
     train_dataset = eval('datasets.' + config.DATASET.DATASET)(
-        root=config.DATASET.ROOT,
-        list_path=config.DATASET.TRAIN_SET,
-        num_classes=config.DATASET.NUM_CLASSES,
-        multi_scale=config.TRAIN.MULTI_SCALE,
-        flip=config.TRAIN.FLIP,
-        downsample_rate=config.DATASET.DOWNSAMPLE_RATE,
-        scale_factor=config.DATASET.SCALE_FACTOR,
-        num_samples=config.DATASET.NUM_SAMPLES,
-        ignore_label=config.DATASET.IGNORE_LABEL,
-        base_size=config.DATASET.BASE_SIZE,
-        crop_size=tuple(config.DATASET.CROP_SIZE),
-        mean=config.DATASET.MEAN,
-        std=config.DATASET.STD,
-        auto_weight=config.DATASET.AUTO_WEIGHT,
-        auto_stats=config.DATASET.AUTO_STATS
     )
 
 
@@ -216,7 +202,9 @@ def main():
         pin_memory=True,
         sampler=test_sampler)
 
-    # criterion
+    #--------------------------------
+    # CRITERION SELECTION
+    #--------------------------------
     if config.LOSS.TYPE == 'ohem':
         criterion = OhemCrossEntropy(
             ignore_label=config.TRAIN.IGNORE_LABEL,
