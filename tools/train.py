@@ -29,7 +29,7 @@ import models
 import datasets
 from config import config
 from config import update_config
-from core.criterion import CrossEntropy, OhemCrossEntropy, DiceLoss, HausdorffLoss, CombinedLoss
+from core.criterion import CrossEntropy, OhemCrossEntropy, DiceLoss, TverskyLoss, FocalTverskyLoss
 from core.function import train, validate
 from utils.modelsummary import get_model_summary
 from utils.utils import create_logger, FullModel
@@ -238,14 +238,14 @@ def main():
             weight=config.LOSS.BALANCE_WEIGHTS
         )
 
-    elif config.LOSS.TYPE == 'dice_haug':
-        criterion = CombinedLoss(
+    elif config.LOSS.TYPE == 'tl':
+        criterion = TverskyLoss(
             ignore_label=config.TRAIN.IGNORE_LABEL,
-            balance_weights=config.LOSS.BALANCE_WEIGHTS
+            weight=config.LOSS.BALANCE_WEIGHTS
         )
 
-    elif config.LOSS.TYPE == 'haug':
-        criterion = HausdorffLoss(
+    elif config.LOSS.TYPE == 'ftl':
+        criterion = FocalTverskyLoss(
             ignore_label=config.TRAIN.IGNORE_LABEL,
             weight=config.LOSS.BALANCE_WEIGHTS
         )
@@ -360,6 +360,10 @@ def main():
             logging.info(msg)
             logging.info(IoU_array)
 
+
+
+
+
     # === après la boucle ===
 
     # Si --comp TRUE → on ajoute le résultat dans comp.txt
@@ -388,7 +392,6 @@ def main():
         end = timeit.default_timer()
         logger.info('Hours: %d' % np.int((end-start)/3600))
         logger.info('Done')
-
 
 if __name__ == '__main__':
     main()

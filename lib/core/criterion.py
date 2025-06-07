@@ -152,86 +152,92 @@ class DiceLoss(nn.Module):
         return sum([w * self._forward(x, target) for (w, x) in zip(self.weight, score)])
 
 
-# ------------------------------------------------------------------------------
-# Adapted for GPS path segmentation from HRNet semantic segmentation
-# ------------------------------------------------------------------------------
-
-
-def get_gaussian_kernel2d(kernel_size=11, sigma=2.0):
-    """Crée un noyau 2D gaussien normalisé pour flouter."""
-    ax = torch.arange(kernel_size).float() - kernel_size // 2
-    xx, yy = torch.meshgrid(ax, ax, indexing="ij")
-    kernel = torch.exp(-(xx**2 + yy**2) / (2 * sigma**2))
-    kernel = kernel / kernel.sum()
-    return kernel.view(1, 1, kernel_size, kernel_size)
-
-
-def soft_distance(tensor, kernel_size=5, sigma=2.0):
-    """
-    Approximation différentiable d'une distance transform.
-    tensor: [B, H, W]
-    retourne: [B, H, W]
-    """
-    tensor = 1. - tensor  # inverser foreground / background
-
-    B, H, W = tensor.shape
-    kernel = get_gaussian_kernel2d(kernel_size, sigma).to(tensor.device)
-    kernel = kernel.expand(1, 1, kernel_size, kernel_size)  # pas besoin de batch
-
-    blurred = F.conv2d(tensor.unsqueeze(1), kernel, padding=kernel_size // 2, groups=1)
-    return blurred.squeeze(1)  # [B, H, W]
-
-
-
-class HausdorffLoss(nn.Module):
-    def __init__(self, weight = [0.4], ignore_label=-1):
-        super(HausdorffLoss, self).__init__()
+class TverskyLoss(nn.Module):
+    def __init__(self, weight, alpha=0.4, beta=0.6, ignore_label=-1, smooth=1.0):
+        super(TverskyLoss, self).__init__()
         self.ignore_label = ignore_label
+        self.smooth = smooth
         self.weight = weight
+        self.alpha = alpha
+        self.beta = beta
 
     def _forward(self, score, target):
         ph, pw = score.size(2), score.size(3)
         h, w = target.size(1), target.size(2)
 
         if ph != h or pw != w:
-            score = F.interpolate(score, size=(h, w), mode='bilinear',
-                                  align_corners=config.MODEL.ALIGN_CORNERS)
+            score = F.interpolate(input=score, size=(h, w),
+                                  mode='bilinear', align_corners=config.MODEL.ALIGN_CORNERS)
 
         probs = F.softmax(score, dim=1)
         probs_fg = probs[:, 1, :, :]  # classe "chemin"
 
         target_fg = (target == 1).float()
+
         valid_mask = (target != self.ignore_label).float()
 
         probs_fg = probs_fg * valid_mask
         target_fg = target_fg * valid_mask
 
-        dist_target = soft_distance(target_fg)
-        dist_pred = soft_distance(probs_fg)
+        TP = (probs_fg * target_fg).sum()
+        FP = (probs_fg * (1 - target_fg)).sum()
+        FN = ((1 - probs_fg) * target_fg).sum()
 
-        diff = torch.abs(probs_fg - target_fg)
-        loss = torch.mean(diff * (dist_target + dist_pred))
+        tversky = (TP + self.smooth) / (TP + self.alpha * FP + self.beta * FN + self.smooth)
 
-        return loss
+        return 1. - tversky
 
     def forward(self, score, target):
         if config.MODEL.NUM_OUTPUTS == 1:
             score = [score]
 
         assert len(self.weight) == len(score)
+
         return sum([w * self._forward(x, target) for (w, x) in zip(self.weight, score)])
 
+class FocalTverskyLoss(nn.Module):
+    def __init__(self, weight, alpha=0.4, beta=0.6, gamma=1.33, ignore_label=-1, smooth=1.0, class_idx=1):
+        super(FocalTverskyLoss, self).__init__()
+        self.ignore_label = ignore_label
+        self.smooth = smooth
+        self.weight = weight
+        self.alpha = alpha
+        self.beta = beta
+        self.gamma = gamma
+        self.class_idx = class_idx  # index de la classe cible (ex: chemin)
 
-class CombinedLoss(nn.Module):
-    def __init__(self, dice_weight=0.7, hausdorff_weight=0.3,
-                 balance_weights=[1.0], ignore_label=-1):
-        super(CombinedLoss, self).__init__()
-        self.dice = DiceLoss(weight=balance_weights, ignore_label=ignore_label)
-        self.hausdorff = HausdorffLoss(weight=balance_weights, ignore_label=ignore_label)
-        self.dice_weight = dice_weight
-        self.hausdorff_weight = hausdorff_weight
+    def _forward(self, score, target):
+        ph, pw = score.size(2), score.size(3)
+        h, w = target.size(1), target.size(2)
+
+        if ph != h or pw != w:
+            score = F.interpolate(input=score, size=(h, w),
+                                  mode='bilinear', align_corners=config.MODEL.ALIGN_CORNERS)
+
+        probs = F.softmax(score, dim=1)
+        probs_fg = probs[:, self.class_idx, :, :]  # ta classe cible
+
+        target_fg = (target == self.class_idx).float()
+        valid_mask = (target != self.ignore_label).float()
+
+        probs_fg = probs_fg * valid_mask
+        target_fg = target_fg * valid_mask
+
+        TP = (probs_fg * target_fg).sum()
+        FP = (probs_fg * (1 - target_fg)).sum()
+        FN = ((1 - probs_fg) * target_fg).sum()
+
+        tversky = (TP + self.smooth) / (TP + self.alpha * FP + self.beta * FN + self.smooth)
+
+        # LF_T = (1 - Tversky)^(1/gamma), sur ta classe uniquement
+        focal_tversky = torch.pow((1 - tversky), 1.0 / self.gamma)
+
+        return focal_tversky
 
     def forward(self, score, target):
-        loss_dice = self.dice(score, target)
-        loss_haus = self.hausdorff(score, target)
-        return self.dice_weight * loss_dice + self.hausdorff_weight * loss_haus
+        if config.MODEL.NUM_OUTPUTS == 1:
+            score = [score]
+
+        assert len(self.weight) == len(score)
+
+        return sum([w * self._forward(x, target) for (w, x) in zip(self.weight, score)])
