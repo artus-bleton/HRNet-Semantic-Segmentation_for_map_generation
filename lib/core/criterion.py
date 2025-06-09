@@ -472,3 +472,17 @@ class TopoLoss(nn.Module):
 
         assert len(self.weight) == len(score)
         return sum([w * self._forward(x, target) for (w, x) in zip(self.weight, score)])
+
+
+
+class Ce_Tl(nn.Module):
+    def __init__(self, weight, lbd=0.5, ignore_label=-1, smooth=1.0):
+        super(Ce_Tl, self).__init__()
+
+        self.lamda = lbd
+
+        self.ce = CrossEntropy()
+        self.tl = TopoLoss(weight=weight)
+
+    def forward(self, score, target):
+        return self.ce(score, target) + lambda * self.tl(score, targer)

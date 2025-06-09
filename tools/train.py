@@ -29,7 +29,7 @@ import models
 import datasets
 from config import config
 from config import update_config
-from core.criterion import CrossEntropy, OhemCrossEntropy, DiceLoss, TverskyLoss, FocalTverskyLoss
+from core.criterion import Ce_Tl, CrossEntropy, OhemCrossEntropy, DiceLoss, TverskyLoss, FocalTverskyLoss
 from core.function import train, validate
 from utils.modelsummary import get_model_summary
 from utils.utils import create_logger, FullModel
@@ -237,6 +237,14 @@ def main():
             ignore_label=config.TRAIN.IGNORE_LABEL,
             weight=config.LOSS.BALANCE_WEIGHTS
         )
+
+    # Recommended for fine-tuning on fine-seg
+    elif config.LOSS.TYPE == 'ce_tl':
+        criterion = Ce_Tl(
+            lbd=0.5,
+            ignore_label=config.TRAIN.IGNORE_LABEL,
+            weight=config.LOSS.BALANCE_WEIGHTS
+        )
     else:
         raise ValueError(f"Unknown loss type: {config.LOSS.TYPE}")
 
@@ -287,6 +295,11 @@ def main():
 
     best_mIoU = 0
     last_epoch = 0
+
+    # ---------------------
+    # Train resume
+    # ---------------------
+
     if config.TRAIN.RESUME:
         model_state_file = os.path.join(final_output_dir,
                                         'checkpoint.pth.tar')
@@ -307,6 +320,10 @@ def main():
     end_epoch = config.TRAIN.END_EPOCH + config.TRAIN.EXTRA_EPOCH
     num_iters = config.TRAIN.END_EPOCH * epoch_iters
     extra_iters = config.TRAIN.EXTRA_EPOCH * extra_epoch_iters
+
+    # ------------------------
+    # Boucle de training
+    # ------------------------
 
     for epoch in range(last_epoch, end_epoch):
 
