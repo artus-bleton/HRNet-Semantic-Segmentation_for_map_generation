@@ -369,23 +369,23 @@ def main():
 
 
 
-    # === après la boucle ===
+    # # === après la boucle ===
 
-    # Si --comp TRUE → on ajoute le résultat dans comp.txt
-    if args.local_rank <= 0 and args.comp.upper() == 'TRUE':
-        os.makedirs("comp_results", exist_ok=True)
+    # # Si --comp TRUE → on ajoute le résultat dans comp.txt
+    # if args.local_rank <= 0 and args.comp.upper() == 'TRUE':
+    #     os.makedirs("comp_results", exist_ok=True)
 
-        # récupère le nom de la config yaml
-        config_name = os.path.basename(args.cfg)
+    #     # récupère le nom de la config yaml
+    #     config_name = os.path.basename(args.cfg)
 
-        # fichier global de log
-        result_file = "comp_results/comp.txt"
+    #     # fichier global de log
+    #     result_file = "comp_results/comp.txt"
 
-        # on ajoute en mode "append"
-        with open(result_file, "a") as f:
-            f.write(f"{config_name} : best_mIoU : {best_mIoU:.4f}\n")
+    #     # on ajoute en mode "append"
+    #     with open(result_file, "a") as f:
+    #         f.write(f"{config_name} : best_mIoU : {best_mIoU:.4f}\n")
 
-        logging.info(f"✅ Appended best_mIoU to {result_file}")
+    #     logging.info(f"✅ Appended best_mIoU to {result_file}")
 
 
     if args.local_rank <= 0:

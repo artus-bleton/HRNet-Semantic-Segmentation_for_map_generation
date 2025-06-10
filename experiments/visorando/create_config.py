@@ -108,7 +108,7 @@ base_config = {
 }
 
 # dossier de sortie des configs
-output_dir = "./"
+output_dir = "./experiments/visorando/"
 os.makedirs(output_dir, exist_ok=True)
 
 # boucle sur toutes les combinaisons

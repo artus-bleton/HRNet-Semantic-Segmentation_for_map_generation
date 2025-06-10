@@ -20,8 +20,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Visorando(BaseDataset):
     def __init__(self,
-                root="data",
-                list_path= "list/visorando",
+                root,
+                list_path,
                 num_classes=2,
                 multi_scale=True,
                 flip = True,
