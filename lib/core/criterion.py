@@ -12,6 +12,7 @@ import logging
 from config import config
 import torchvision.transforms as T
 import gudhi as gd
+import math
 
 
 
@@ -38,7 +39,7 @@ class CrossEntropy(nn.Module):
 
     def forward(self, score, target):
 
-        if config.MODEL.NUM_OUT*UTS == 1:
+        if config.MODEL.NUM_OUTPUTS == 1:
             score = [score]
 
         weights = config.LOSS.BALANCE_WEIGHTS
@@ -330,6 +331,7 @@ def compute_dgm_force(lh_dgm, gt_dgm, pers_thresh=0.03, pers_thresh_perfect=0.99
     force_list[idx_holes_to_remove, 1] = -lh_pers[idx_holes_to_remove] / \
                                          math.sqrt(2.0)
 
+
     if (do_return_perfect):
         return force_list, idx_holes_to_fix, idx_holes_to_remove, idx_holes_perfect
 
@@ -364,14 +366,14 @@ def getCriticalPoints(likelihood):
     if (len(pairs_lh[0])==0): return 0, 0, 0, False
 
     # return persistence diagram, birth/death critical points
-    pd_lh = numpy.array([[lh_vector[pairs_lh[0][0][i][0]], lh_vector[pairs_lh[0][0][i][1]]] for i in range(len(pairs_lh[0][0]))])
-    bcp_lh = numpy.array([[pairs_lh[0][0][i][0]//lh.shape[1], pairs_lh[0][0][i][0]%lh.shape[1]] for i in range(len(pairs_lh[0][0]))])
-    dcp_lh = numpy.array([[pairs_lh[0][0][i][1]//lh.shape[1], pairs_lh[0][0][i][1]%lh.shape[1]] for i in range(len(pairs_lh[0][0]))])
+    pd_lh = np.array([[lh_vector[pairs_lh[0][0][i][0]], lh_vector[pairs_lh[0][0][i][1]]] for i in range(len(pairs_lh[0][0]))])
+    bcp_lh = np.array([[pairs_lh[0][0][i][0]//lh.shape[1], pairs_lh[0][0][i][0]%lh.shape[1]] for i in range(len(pairs_lh[0][0]))])
+    dcp_lh = np.array([[pairs_lh[0][0][i][1]//lh.shape[1], pairs_lh[0][0][i][1]%lh.shape[1]] for i in range(len(pairs_lh[0][0]))])
 
     return pd_lh, bcp_lh, dcp_lh, True
 
 class TopoLoss(nn.Module):
-    def __init__(self, weight, ignore_label=-1, smooth=1.0, topo_size=100):
+    def __init__(self, weight, ignore_label=-1, smooth=1.0, topo_size=80):
         super(TopoLoss, self).__init__()
         self.ignore_label = ignore_label
         self.smooth = smooth
@@ -403,6 +405,7 @@ class TopoLoss(nn.Module):
 
                 if not (pairs_lh_pa): continue
                 if not (pairs_lh_gt): continue
+                if (len(pd_lh.shape) != 2): continue
 
                 force_list, idx_holes_to_fix, idx_holes_to_remove = compute_dgm_force(pd_lh, pd_gt, pers_thresh=0.03)
 
@@ -460,11 +463,14 @@ class TopoLoss(nn.Module):
         target_fg = target_fg * valid_mask
 
         # On suppose batch size 1 pour getTopoLoss actuel
-        assert probs_fg.shape[0] == 1, "TopoLoss actuelle ne supporte que batch_size=1"
+        #assert probs_fg.shape[0] == 1, "TopoLoss actuelle ne supporte que batch_size=1"
 
         # Calcul TopoLoss
-        loss_topo = self._get_topo_loss(probs_fg[0], target_fg[0])
-        return loss_topo
+        loss_topo = 0
+        for i in range(probs.shape[0]):
+            print("loss :", i ,"/32")
+            loss_topo = loss_topo + self._get_topo_loss(probs_fg[i], target_fg[i])
+        return loss_topo / probs.shape[0]
 
     def forward(self, score, target):
         if config.MODEL.NUM_OUTPUTS == 1:
@@ -485,4 +491,16 @@ class Ce_Tl(nn.Module):
         self.tl = TopoLoss(weight=weight)
 
     def forward(self, score, target):
-        return self.ce(score, target) + self.lamda * self.tl(score, targer)
+        return self.ce(score, target) + self.lamda * self.tl(score, target)
+
+class Di_Tl(nn.Module):
+    def __init__(self, weight, lbd=0.5, ignore_label=-1, smooth=1.0):
+        super(Di_Tl, self).__init__()
+
+        self.lamda = lbd
+
+        self.di = DiceLoss(weight=weight)
+        self.tl = TopoLoss(weight=weight)
+
+    def forward(self, score, target):
+        return self.di(score, target) + self.lamda * self.tl(score, target)

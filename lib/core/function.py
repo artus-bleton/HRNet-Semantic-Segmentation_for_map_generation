@@ -65,6 +65,7 @@ def train(config, epoch, num_epoch, epoch_iters, base_lr,
 
         # Forward
         losses, pred = model(images, labels)  # pred = logits [B, C, H, W]
+
         loss = losses.mean()
 
         if dist.is_distributed():

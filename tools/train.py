@@ -29,7 +29,7 @@ import models
 import datasets
 from config import config
 from config import update_config
-from core.criterion import Ce_Tl, CrossEntropy, OhemCrossEntropy, DiceLoss, TverskyLoss, FocalTverskyLoss
+from core.criterion import Ce_Tl, CrossEntropy, OhemCrossEntropy, DiceLoss, TverskyLoss, FocalTverskyLoss, Di_Tl
 from core.function import train, validate
 from utils.modelsummary import get_model_summary
 from utils.utils import create_logger, FullModel
@@ -130,9 +130,18 @@ def main():
 
     # prepare data
     crop_size = (config.TRAIN.IMAGE_SIZE[1], config.TRAIN.IMAGE_SIZE[0])
-    train_dataset = eval('datasets.' + config.DATASET.DATASET)(
-    )
-
+    train_dataset = eval('datasets.'+config.DATASET.DATASET)(
+                        root=config.DATASET.ROOT,
+                        list_path=config.DATASET.TRAIN_SET,
+                        num_samples=None,
+                        num_classes=config.DATASET.NUM_CLASSES,
+                        multi_scale=config.TRAIN.MULTI_SCALE,
+                        flip=config.TRAIN.FLIP,
+                        ignore_label=config.TRAIN.IGNORE_LABEL,
+                        base_size=config.TRAIN.BASE_SIZE,
+                        crop_size=crop_size,
+                        downsample_rate=config.TRAIN.DOWNSAMPLERATE,
+                        scale_factor=config.TRAIN.SCALE_FACTOR)
 
 
     train_sampler = get_sampler(train_dataset)
@@ -241,7 +250,13 @@ def main():
     # Recommended for fine-tuning on fine-seg
     elif config.LOSS.TYPE == 'ce_tl':
         criterion = Ce_Tl(
-            lbd=0.5,
+            lbd=0.05,
+            ignore_label=config.TRAIN.IGNORE_LABEL,
+            weight=config.LOSS.BALANCE_WEIGHTS
+        )
+    elif config.LOSS.TYPE == 'di_tl':
+        criterion = Di_Tl(
+            lbd=0.05,
             ignore_label=config.TRAIN.IGNORE_LABEL,
             weight=config.LOSS.BALANCE_WEIGHTS
         )
@@ -308,13 +323,16 @@ def main():
             best_mIoU = checkpoint['best_mIoU']
             last_epoch = checkpoint['epoch']
             dct = checkpoint['state_dict']
+            print("->Resumed corretly")
 
             model.module.model.load_state_dict({k.replace('model.', ''): v for k, v in checkpoint['state_dict'].items() if k.startswith('model.')})
             optimizer.load_state_dict(checkpoint['optimizer'])
             logger.info("=> loaded checkpoint (epoch {})"
                         .format(checkpoint['epoch']))
+            final_output_dir = final_output_dir + "_fine_tuned"
         if distributed:
             torch.distributed.barrier()
+
 
     start = timeit.default_timer()
     end_epoch = config.TRAIN.END_EPOCH + config.TRAIN.EXTRA_EPOCH

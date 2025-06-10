@@ -1,123 +1,123 @@
 CUDNN:
-    BENCHMARK: true
-    DETERMINISTIC: false
-    ENABLED: true
+  BENCHMARK: true
+  DETERMINISTIC: false
+  ENABLED: true
 GPUS:
-    - 0
+- 0
 OUTPUT_DIR: output/visorando
 LOG_DIR: log
 WORKERS: 8
 PRINT_FREQ: 10
 DATASET:
-    DATASET: Visorando
-    ROOT: data/list/visorando/
-    TRAIN_SET: train.lst
-    TEST_SET: val.lst
-    NUM_CLASSES: 2
-    IGNORE_LABEL: -1
-    BASE_SIZE: 320
-    CROP_SIZE:
-        - 320
-        - 320
-    SCALE_FACTOR: 16
-    FLIP: true
-    MULTI_SCALE: true
-    DOWNSAMPLE_RATE: 1
-    MEAN:
-        - 0.5
-        - 0.5
-        - 0.5
-    STD:
-        - 0.5
-        - 0.5
-        - 0.5
-    AUTO_WEIGHT: false
-    AUTO_STATS: false
-    NUM_SAMPLES: null
+  DATASET: Visorando
+  ROOT: data/
+  TRAIN_SET: list/visorando/train.lst
+  TEST_SET: list/visorando/val.lst
+  NUM_CLASSES: 2
+  IGNORE_LABEL: -1
+  BASE_SIZE: 320
+  CROP_SIZE:
+  - 320
+  - 320
+  SCALE_FACTOR: 16
+  FLIP: true
+  MULTI_SCALE: true
+  DOWNSAMPLE_RATE: 1
+  MEAN:
+  - 0.5
+  - 0.5
+  - 0.5
+  STD:
+  - 0.5
+  - 0.5
+  - 0.5
+  AUTO_WEIGHT: false
+  AUTO_STATS: false
+  NUM_SAMPLES: null
 MODEL:
-    NAME: seg_hrnet
-    ALIGN_CORNERS: true
-    NUM_OUTPUTS: 1
-    EXTRA:
-        FINAL_CONV_KERNEL: 1
-        STAGE1:
-            NUM_MODULES: 1
-            NUM_BRANCHES: 1
-            BLOCK: BOTTLENECK
-            NUM_BLOCKS:
-                - 4
-            NUM_CHANNELS:
-                - 64
-            FUSE_METHOD: SUM
-        STAGE2:
-            NUM_MODULES: 1
-            NUM_BRANCHES: 2
-            BLOCK: BASIC
-            NUM_BLOCKS:
-                - 4
-                - 4
-            NUM_CHANNELS:
-                - 48
-                - 96
-            FUSE_METHOD: SUM
-        STAGE3:
-            NUM_MODULES: 4
-            NUM_BRANCHES: 3
-            BLOCK: BASIC
-            NUM_BLOCKS:
-                - 4
-                - 4
-                - 4
-            NUM_CHANNELS:
-                - 48
-                - 96
-                - 192
-            FUSE_METHOD: SUM
-        STAGE4:
-            NUM_MODULES: 3
-            NUM_BRANCHES: 4
-            BLOCK: BASIC
-            NUM_BLOCKS:
-                - 4
-                - 4
-                - 4
-                - 4
-            NUM_CHANNELS:
-                - 48
-                - 96
-                - 192
-                - 384
-            FUSE_METHOD: SUM
+  NAME: seg_hrnet
+  ALIGN_CORNERS: true
+  NUM_OUTPUTS: 1
+  EXTRA:
+    FINAL_CONV_KERNEL: 1
+    STAGE1:
+      NUM_MODULES: 1
+      NUM_BRANCHES: 1
+      BLOCK: BOTTLENECK
+      NUM_BLOCKS:
+      - 4
+      NUM_CHANNELS:
+      - 64
+      FUSE_METHOD: SUM
+    STAGE2:
+      NUM_MODULES: 1
+      NUM_BRANCHES: 2
+      BLOCK: BASIC
+      NUM_BLOCKS:
+      - 4
+      - 4
+      NUM_CHANNELS:
+      - 48
+      - 96
+      FUSE_METHOD: SUM
+    STAGE3:
+      NUM_MODULES: 4
+      NUM_BRANCHES: 3
+      BLOCK: BASIC
+      NUM_BLOCKS:
+      - 4
+      - 4
+      - 4
+      NUM_CHANNELS:
+      - 48
+      - 96
+      - 192
+      FUSE_METHOD: SUM
+    STAGE4:
+      NUM_MODULES: 3
+      NUM_BRANCHES: 4
+      BLOCK: BASIC
+      NUM_BLOCKS:
+      - 4
+      - 4
+      - 4
+      - 4
+      NUM_CHANNELS:
+      - 48
+      - 96
+      - 192
+      - 384
+      FUSE_METHOD: SUM
 LOSS:
-    TYPE: dice
-    BALANCE_WEIGHTS:
-        - 1
+  TYPE: dice
+  BALANCE_WEIGHTS:
+  - 1
 TRAIN:
-    IMAGE_SIZE:
-        - 320
-        - 320
-    BASE_SIZE: 320
-    BATCH_SIZE_PER_GPU: 4
-    SHUFFLE: true
-    BEGIN_EPOCH: 0
-    END_EPOCH: 10
-    RESUME: false
-    OPTIMIZER: sgd
-    LR: 0.0001
-    WD: 0.0005
-    MOMENTUM: 0.9
-    NESTEROV: false
-    FLIP: true
-    MULTI_SCALE: true
-    DOWNSAMPLERATE: 1
-    IGNORE_LABEL: -1
-    SCALE_FACTOR: 16
+  IMAGE_SIZE:
+  - 320
+  - 320
+  BASE_SIZE: 320
+  BATCH_SIZE_PER_GPU: 4
+  SHUFFLE: true
+  BEGIN_EPOCH: 0
+  END_EPOCH: 10
+  RESUME: false
+  OPTIMIZER: sgd
+  LR: 0.0001
+  WD: 0.0005
+  MOMENTUM: 0.9
+  NESTEROV: false
+  FLIP: true
+  MULTI_SCALE: true
+  DOWNSAMPLERATE: 1
+  IGNORE_LABEL: -1
+  SCALE_FACTOR: 16
 TEST:
-    IMAGE_SIZE:
-        - 320
-        - 320
-    BASE_SIZE: 320
-    BATCH_SIZE_PER_GPU: 4
-    NUM_SAMPLES: null
-    FLIP_TEST: true
-    MULTI_SCALE: true
+  IMAGE_SIZE:
+  - 320
+  - 320
+  BASE_SIZE: 320
+  BATCH_SIZE_PER_GPU: 4
+  NUM_SAMPLES: null
+  FLIP_TEST: true
+  MULTI_SCALE: true
