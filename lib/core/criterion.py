@@ -4,6 +4,7 @@
 # Written by Ke Sun (sunk@mail.ustc.edu.cn)
 # ------------------------------------------------------------------------------
 
+from numpy.ma import masked
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
@@ -15,14 +16,12 @@ import gudhi as gd
 import math
 
 
-
-
 class CrossEntropy(nn.Module):
-    def __init__(self, ignore_label=-1, weight=None):
+    def __init__(self, ignore_label=-1, weight=[0.95,0.05]):
         super(CrossEntropy, self).__init__()
         self.ignore_label = ignore_label
         self.criterion = nn.CrossEntropyLoss(
-            weight=weight,
+            weight=torch.tensor(weight),
             ignore_index=ignore_label
         )
 
@@ -32,6 +31,7 @@ class CrossEntropy(nn.Module):
         if ph != h or pw != w:
             score = F.interpolate(input=score, size=(
                 h, w), mode='bilinear', align_corners=config.MODEL.ALIGN_CORNERS)
+
 
         loss = self.criterion(score, target)
 

@@ -6,12 +6,12 @@ GPUS:
     - 0
 OUTPUT_DIR: output/visorando
 LOG_DIR: log
-WORKERS: 16
+WORKERS: 8
 PRINT_FREQ: 1
 DATASET:
     DATASET: Visorando
     ROOT: data/
-    TRAIN_SET: list/visorando/train.lst
+    TRAIN_SET: list/visorando/train_ft.lst
     TEST_SET: list/visorando/val.lst
     NUM_CLASSES: 2
     IGNORE_LABEL: -1
@@ -36,6 +36,7 @@ DATASET:
     NUM_SAMPLES: null
 MODEL:
     NAME: seg_hrnet
+    PRETRAINED: output/visorando/Visorando/config_viso_dice_new_dataset_batchsize32_lr0.0005/final_state.pth
     ALIGN_CORNERS: true
     NUM_OUTPUTS: 1
     EXTRA:
@@ -89,7 +90,7 @@ MODEL:
                 - 384
             FUSE_METHOD: SUM
 LOSS:
-    TYPE: di_tl
+    TYPE: ce_tl
     BALANCE_WEIGHTS:
         - 1
 TRAIN:
@@ -101,9 +102,9 @@ TRAIN:
     SHUFFLE: true
     BEGIN_EPOCH: 0
     END_EPOCH: 10
-    RESUME: true
+    RESUME: false
     OPTIMIZER: sgd
-    LR: 0.01
+    LR: 0.0005
     WD: 0.0005
     MOMENTUM: 0.9
     NESTEROV: false

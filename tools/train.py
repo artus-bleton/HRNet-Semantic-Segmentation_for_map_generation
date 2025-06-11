@@ -110,6 +110,23 @@ def main():
     model = eval('models.'+config.MODEL.NAME +
                  '.get_seg_model')(config)
 
+    # --------------------
+    #chargement du modèle pré-entrainé
+    # --------------------
+    if config.MODEL.PRETRAINED is not None:
+        print("CHARGEMENT DU MODÈLE PRE_ENTRAINE")
+        pretrained_dict = torch.load(config.MODEL.PRETRAINED)
+        if 'state_dict' in pretrained_dict:
+            pretrained_dict = pretrained_dict['state_dict']
+        model_dict = model.state_dict()
+        pretrained_dict = {k[6:]: v for k, v in pretrained_dict.items()
+                            if k[6:] in model_dict.keys()}
+        for k, _ in pretrained_dict.items():
+            logger.info(
+                '=> loading {} from pretrained model'.format(k))
+        model_dict.update(pretrained_dict)
+        model.load_state_dict(model_dict)
+
     # dump_input = torch.rand(
     #     (1, 3, config.TRAIN.IMAGE_SIZE[1], config.TRAIN.IMAGE_SIZE[0])
     # )
@@ -250,13 +267,13 @@ def main():
     # Recommended for fine-tuning on fine-seg
     elif config.LOSS.TYPE == 'ce_tl':
         criterion = Ce_Tl(
-            lbd=0.05,
+            lbd=0.005,
             ignore_label=config.TRAIN.IGNORE_LABEL,
             weight=config.LOSS.BALANCE_WEIGHTS
         )
     elif config.LOSS.TYPE == 'di_tl':
         criterion = Di_Tl(
-            lbd=0.05,
+            lbd=0.005,
             ignore_label=config.TRAIN.IGNORE_LABEL,
             weight=config.LOSS.BALANCE_WEIGHTS
         )
@@ -317,9 +334,9 @@ def main():
 
     if config.TRAIN.RESUME:
         model_state_file = os.path.join(final_output_dir,
-                                        'checkpoint.pth.tar')
+                                        'best.pth')
         if os.path.isfile(model_state_file):
-            checkpoint = torch.load(model_state_file, map_location={'cuda:0': 'cpu'})
+            checkpoint = torch.load(model_state_file,weights_only=False, map_location={'cuda:0': 'cpu'})
             best_mIoU = checkpoint['best_mIoU']
             last_epoch = checkpoint['epoch']
             dct = checkpoint['state_dict']
@@ -329,7 +346,6 @@ def main():
             optimizer.load_state_dict(checkpoint['optimizer'])
             logger.info("=> loaded checkpoint (epoch {})"
                         .format(checkpoint['epoch']))
-            final_output_dir = final_output_dir + "_fine_tuned"
         if distributed:
             torch.distributed.barrier()
 
@@ -342,7 +358,6 @@ def main():
     # ------------------------
     # Boucle de training
     # ------------------------
-
     for epoch in range(last_epoch, end_epoch):
 
         current_trainloader = extra_trainloader if epoch >= config.TRAIN.END_EPOCH else trainloader

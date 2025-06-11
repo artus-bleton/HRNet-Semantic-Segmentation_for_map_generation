@@ -113,11 +113,10 @@ os.makedirs(output_dir, exist_ok=True)
 
 # boucle sur toutes les combinaisons
 for loss, batch_size, lr in itertools.product(loss_list, batch_size_list, lr_list):
-    # formatage du lr pour le nom
-    lr_str = f"{lr:.0e}" if lr < 1e-3 else f"{lr:.1e}"
+
 
     # nom du fichier
-    filename = f"config_viso_{loss}_new_dataset_batchsize{batch_size}_lr{lr_str}.yaml"
+    filename = f"config_viso_{loss}_new_dataset_batchsize{batch_size}_lr{lr}.yaml"
     filepath = os.path.join(output_dir, filename)
 
     # création de la config spécifique
