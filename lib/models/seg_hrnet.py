@@ -206,7 +206,7 @@ class HighResolutionModule(nn.Module):
                                 nn.Conv2d(num_inchannels[j],
                                           num_outchannels_conv3x3,
                                           3, 2, 1, bias=False),
-                                BatchNorm2d(num_outchannels_conv3x3, 
+                                BatchNorm2d(num_outchannels_conv3x3,
                                             momentum=BN_MOMENTUM)))
                         else:
                             num_outchannels_conv3x3 = num_inchannels[j]
@@ -275,7 +275,8 @@ class HighResolutionNet(nn.Module):
         self.bn2 = BatchNorm2d(64, momentum=BN_MOMENTUM)
         self.relu = nn.ReLU(inplace=relu_inplace)
 
-        self.stage1_cfg = extra['STAGE1']
+        print("\n extra : ",extra)
+        self.stage1_cfg = extra["STAGE1"]
         num_channels = self.stage1_cfg['NUM_CHANNELS'][0]
         block = blocks_dict[self.stage1_cfg['BLOCK']]
         num_blocks = self.stage1_cfg['NUM_BLOCKS'][0]
@@ -311,7 +312,7 @@ class HighResolutionNet(nn.Module):
             pre_stage_channels, num_channels)
         self.stage4, pre_stage_channels = self._make_stage(
             self.stage4_cfg, num_channels, multi_scale_output=True)
-        
+
         last_inp_channels = np.int(np.sum(pre_stage_channels))
 
         self.last_layer = nn.Sequential(
@@ -475,7 +476,7 @@ class HighResolutionNet(nn.Module):
         if os.path.isfile(pretrained):
             pretrained_dict = torch.load(pretrained)
             logger.info('=> loading pretrained model {}'.format(pretrained))
-            model_dict = self.state_dict()              
+            model_dict = self.state_dict()
             pretrained_dict = {k: v for k, v in pretrained_dict.items()
                                if k in model_dict.keys()}
             for k, _ in pretrained_dict.items():

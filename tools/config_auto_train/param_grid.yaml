@@ -1,0 +1,21 @@
+# param_grid.yaml
+
+loss_list:
+    - tl
+    - ftl
+    - di_tl
+
+batch_size_list:
+    - 32
+
+lr_list:
+    - 0.0005
+
+# Must be in order (VERY IMPORTANT)
+# because the 20 epochs training uses the 10 epoch training's model as starting model
+epochs:
+    - 10
+    - 15
+    - 20
+    - 25
+    - 30

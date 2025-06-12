@@ -4,6 +4,7 @@
 # Written by Ke Sun (sunk@mail.ustc.edu.cn)
 # ------------------------------------------------------------------------------
 
+from itertools import filterfalse
 import logging
 import os
 import time
@@ -220,11 +221,11 @@ def testval(config, test_dataset, testloader, model,
             print("[DEBUG/function.py] -> val in pred  :", dict(zip(unique_pred, count_pred)), "\n\n")
 
 
-
-
             if len(border_padding) > 0:
                 border_padding = border_padding[0]
                 pred = pred[:, :, 0:pred.size(2) - border_padding[0], 0:pred.size(3) - border_padding[1]]
+
+
 
             if pred.size()[-2] != size[-2] or pred.size()[-1] != size[-1]:
                 pred = F.interpolate(
@@ -263,6 +264,59 @@ def testval(config, test_dataset, testloader, model,
     mean_IoU = IoU_array.mean()
 
     return mean_IoU, IoU_array, pixel_acc, mean_acc
+
+
+def pred(config, test_dataset, testloader, model,
+            sv_dir='', sv_pred=False):
+    model.eval()
+    with torch.no_grad():
+        for index, batch in enumerate(tqdm(testloader)):
+            image, size, name, *border_padding = batch
+            size = size[0]
+            pred = test_dataset.multi_scale_inference(
+                config,
+                model,
+                image,
+                scales=config.TEST.SCALE_LIST,
+                flip=False)
+
+            # --- LOGITS STATS PAR CLASSE ---
+            print("[DEBUG/function.py] -> pred (logits) stats :")
+            print("  shape        :", pred.shape)
+            print("  classe 0 - min :", pred[:, 0, :, :].min().item(),
+                  ", max :", pred[:, 0, :, :].max().item(),
+                  ", mean :", pred[:, 0, :, :].mean().item(),
+                  ", std :", pred[:, 0, :, :].std().item())
+            print("  classe 1 - min :", pred[:, 1, :, :].min().item(),
+                  ", max :", pred[:, 1, :, :].max().item(),
+                  ", mean :", pred[:, 1, :, :].mean().item(),
+                  ", std :", pred[:, 1, :, :].std().item())
+
+            # --- PREDICTED CLASSES ---
+            pred_classes = torch.argmax(pred, dim=1)  # shape [B, H, W]
+            unique_pred, count_pred = np.unique(pred_classes.cpu().numpy(), return_counts=True)
+            print("[DEBUG/function.py] -> val in pred  :", dict(zip(unique_pred, count_pred)), "\n\n")
+
+            print("pred : ", pred.size())
+
+
+
+            if len(border_padding) > 0:
+                border_padding = border_padding[0]
+                pred = pred[:, :, 0:pred.size(2) - border_padding[0], 0:pred.size(3) - border_padding[1]]
+
+            if pred.size()[-2] != size[0] or pred.size()[-1] != size[1]:
+                pred = F.interpolate(
+                    pred, size[-2:],
+                    mode='bilinear', align_corners=config.MODEL.ALIGN_CORNERS
+                )
+
+
+            if sv_pred:
+                sv_path = os.path.join(sv_dir, 'test_results')
+                if not os.path.exists(sv_path):
+                    os.mkdir(sv_path)
+                test_dataset.save_pred(pred, sv_path, name)
 
 
 def test(config, test_dataset, testloader, model,

@@ -1,24 +1,46 @@
+from genericpath import commonprefix
 import os
 import itertools
+import yaml
+import argparse
 
-# listes des paramètres à tester
-loss_list = ["dice"]
-batch_size_list = [4, 16, 32]
-lr_list = [1e-4, 5e-4, 1e-3]
+from lib.training_tools.create_config import ConfigGenerator
 
-# chemin vers ton script de training
+# Argument parser
+parser = argparse.ArgumentParser(description="Run grid search with param grid YAML")
+parser.add_argument("--cfg", type=str, required=True, help="Path to param_grid.yaml")
+
+args = parser.parse_args()
+
+# lecture du param_grid.yaml
+with open(args.cfg, "r") as f:
+    param_grid = yaml.safe_load(f)
+
+loss_list = param_grid["loss_list"]
+batch_size_list = param_grid["batch_size_list"]
+lr_list = param_grid["lr_list"]
+epochs = param_grid["epochs"]
+
+# Creation des fichiers YAML
+cfg_gen = ConfigGenerator(
+    loss_list=loss_list,
+    batch_size_list=batch_size_list,
+    lr_list=lr_list,
+    epochs_list=epochs
+)
+cfg_gen.generate_configs()
+
+
+# Execution des scripts de training
 train_script = "python3 tools/train.py"  # à adapter si besoin
 
-# on boucle sur le produit cartésien
-for loss, batch_size, lr in itertools.product(loss_list, batch_size_list, lr_list):
-    # formater le lr pour le nom de fichier (ex: 0.001 → 1e-3)
-    lr_str = f"{lr:.0e}" if lr < 1e-3 else f"{lr:.1e}"
+# boucle sur toutes les combinaisons
+for loss, batch_size, lr, epoch in itertools.product(loss_list, batch_size_list, lr_list, epochs):
 
-    # créer le nom de config
-    config_name = f"config_viso_{loss}_new_dataset_batchsize{batch_size}_lr{lr_str}.yaml"
+    lr_str = str(lr)[2:]
+    config_name = f"{loss}_bs{batch_size}_lr{lr_str}_epch{epoch}.yaml"
 
-    # commande à exécuter
-    cmd = f"{train_script} --cfg experiments/visorando/{config_name} --comp"
+    cmd = f"{train_script} --cfg experiments/visorando/{config_name}"
 
     print(f"=== Running : {cmd} ===")
     os.system(cmd)

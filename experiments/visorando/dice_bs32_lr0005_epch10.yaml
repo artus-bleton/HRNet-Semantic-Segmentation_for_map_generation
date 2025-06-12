@@ -36,7 +36,7 @@ DATASET:
     NUM_SAMPLES: null
 MODEL:
     NAME: seg_hrnet
-    #PRETRAINED: output/visorando/Visorando/config_viso_dice_new_dataset_batchsize32_lr0.0005/final_state.pth
+    PRETRAINED: ""
     ALIGN_CORNERS: true
     NUM_OUTPUTS: 1
     EXTRA:
@@ -90,7 +90,7 @@ MODEL:
                 - 384
             FUSE_METHOD: SUM
 LOSS:
-    TYPE: di_tl
+    TYPE: dice
     LBD: 0.0025
     BALANCE_WEIGHTS:
         - 1
@@ -103,7 +103,7 @@ TRAIN:
     SHUFFLE: true
     BEGIN_EPOCH: 0
     END_EPOCH: 10
-    RESUME: false
+    RESUME: ""
     OPTIMIZER: sgd
     LR: 0.0005
     WD: 0.0005

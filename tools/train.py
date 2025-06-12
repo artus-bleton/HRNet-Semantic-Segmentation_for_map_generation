@@ -265,14 +265,14 @@ def main():
         )
 
     # Recommended for fine-tuning on fine-seg
-    elif config.LOSS.TYPE == 'ce_tl':
-        criterion = Ce_Tl(
+    elif config.LOSS.TYPE == 'ce_tl': #topoloss
+        criterion = Ce_Tl( #CrossEntropy + lbd *topoloss
             lbd=0.005,
             ignore_label=config.TRAIN.IGNORE_LABEL,
             weight=config.LOSS.BALANCE_WEIGHTS
         )
     elif config.LOSS.TYPE == 'di_tl':
-        criterion = Di_Tl(
+        criterion = Di_Tl( #DiceLoss + lbd *topoloss
             lbd=config.LOSS.LBD,
             ignore_label=config.TRAIN.IGNORE_LABEL,
             weight=config.LOSS.BALANCE_WEIGHTS
@@ -332,12 +332,11 @@ def main():
     # Train resume
     # ---------------------
 
-    if config.TRAIN.RESUME:
-        model_state_file = os.path.join(final_output_dir,
-                                        'best.pth')
+    if config.TRAIN.RESUME != "":
+        model_state_file = os.path.join(config.TRAIN.RESUME,
+                                        'checkpoint.pth.tar')
         if os.path.isfile(model_state_file):
             checkpoint = torch.load(model_state_file,weights_only=False, map_location={'cuda:0': 'cpu'})
-            best_mIoU = checkpoint['best_mIoU']
             last_epoch = checkpoint['epoch']
             dct = checkpoint['state_dict']
             print("->Resumed corretly")
@@ -397,28 +396,6 @@ def main():
                         valid_loss, mean_IoU, best_mIoU)
             logging.info(msg)
             logging.info(IoU_array)
-
-
-
-
-
-    # # === après la boucle ===
-
-    # # Si --comp TRUE → on ajoute le résultat dans comp.txt
-    # if args.local_rank <= 0 and args.comp.upper() == 'TRUE':
-    #     os.makedirs("comp_results", exist_ok=True)
-
-    #     # récupère le nom de la config yaml
-    #     config_name = os.path.basename(args.cfg)
-
-    #     # fichier global de log
-    #     result_file = "comp_results/comp.txt"
-
-    #     # on ajoute en mode "append"
-    #     with open(result_file, "a") as f:
-    #         f.write(f"{config_name} : best_mIoU : {best_mIoU:.4f}\n")
-
-    #     logging.info(f"✅ Appended best_mIoU to {result_file}")
 
 
     if args.local_rank <= 0:
