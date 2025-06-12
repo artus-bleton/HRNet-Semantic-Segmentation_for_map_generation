@@ -1,20 +1,21 @@
 import os
 import yaml
 import itertools
+import copy
 
 # paramètres à tester
-loss_list = ["dice"]
+loss_list = ["dice"]  # tu peux rajouter "di_tl" si tu veux
 batch_size_list = [4, 16, 32]
 lr_list = [1e-4, 5e-4, 1e-3]
 
-# template commun (copié depuis ton message)
+# template basé sur ton dernier YAML
 base_config = {
     "CUDNN": {"BENCHMARK": True, "DETERMINISTIC": False, "ENABLED": True},
     "GPUS": [0],
     "OUTPUT_DIR": "output/visorando",
     "LOG_DIR": "log",
     "WORKERS": 8,
-    "PRINT_FREQ": 10,
+    "PRINT_FREQ": 1,
     "DATASET": {
         "DATASET": "Visorando",
         "ROOT": "data/",
@@ -36,6 +37,7 @@ base_config = {
     },
     "MODEL": {
         "NAME": "seg_hrnet",
+        "PRETRAINED": "",  # facultatif si tu veux l'ajouter
         "ALIGN_CORNERS": True,
         "NUM_OUTPUTS": 1,
         "EXTRA": {
@@ -75,7 +77,8 @@ base_config = {
         },
     },
     "LOSS": {
-        "TYPE": "dice",  # sera modifié
+        "TYPE": "di_tl",  # sera modifié
+        "LBD": 0.0025,
         "BALANCE_WEIGHTS": [1],
     },
     "TRAIN": {
@@ -87,7 +90,7 @@ base_config = {
         "END_EPOCH": 10,
         "RESUME": False,
         "OPTIMIZER": "sgd",
-        "LR": 0.001,  # sera modifié
+        "LR": 0.0005,  # sera modifié
         "WD": 0.0005,
         "MOMENTUM": 0.9,
         "NESTEROV": False,
@@ -114,17 +117,19 @@ os.makedirs(output_dir, exist_ok=True)
 # boucle sur toutes les combinaisons
 for loss, batch_size, lr in itertools.product(loss_list, batch_size_list, lr_list):
 
-
     # nom du fichier
-    filename = f"config_viso_{loss}_new_dataset_batchsize{batch_size}_lr{lr}.yaml"
+    lr_str = str(lr)[2:]
+
+    filename = f"{loss}_bs{batch_size}_lr{lr_str}.yaml"
     filepath = os.path.join(output_dir, filename)
 
     # création de la config spécifique
-    config = base_config.copy()
+    config = copy.deepcopy(base_config)
     config["LOSS"]["TYPE"] = loss
     config["TRAIN"]["BATCH_SIZE_PER_GPU"] = batch_size
     config["TEST"]["BATCH_SIZE_PER_GPU"] = batch_size
-    config["TRAIN"]["LR"] = lr
+    config["TRAIN"]["LR"] = lr_str = str(lr)[2:]
+
 
     # écriture YAML
     with open(filepath, "w") as f:

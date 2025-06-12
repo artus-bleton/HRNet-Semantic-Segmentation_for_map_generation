@@ -113,7 +113,7 @@ def main():
     # --------------------
     #chargement du modèle pré-entrainé
     # --------------------
-    if config.MODEL.PRETRAINED is not None:
+    if config.MODEL.PRETRAINED != "":
         print("CHARGEMENT DU MODÈLE PRE_ENTRAINE")
         pretrained_dict = torch.load(config.MODEL.PRETRAINED)
         if 'state_dict' in pretrained_dict:
@@ -273,7 +273,7 @@ def main():
         )
     elif config.LOSS.TYPE == 'di_tl':
         criterion = Di_Tl(
-            lbd=0.005,
+            lbd=config.LOSS.LBD,
             ignore_label=config.TRAIN.IGNORE_LABEL,
             weight=config.LOSS.BALANCE_WEIGHTS
         )

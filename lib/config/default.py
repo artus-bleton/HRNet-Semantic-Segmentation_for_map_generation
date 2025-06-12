@@ -50,6 +50,7 @@ _C.MODEL.OCR.SCALE = 1
 _C.LOSS = CN()
 _C.LOSS.TYPE = "dice"
 _C.LOSS.BALANCE_WEIGHTS = [0.5, 0.5]
+_C.LOSS.LBD = 0.0025
 
 
 # DATASET related params
