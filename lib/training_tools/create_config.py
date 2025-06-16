@@ -4,13 +4,16 @@ import itertools
 import copy
 import glob
 
+from .naming import make_run_name
+
 class ConfigGenerator:
-    def __init__(self,loss_list : list[str], batch_size_list:list[int], lr_list:list[float], epochs_list:list[int],  output_dir="./experiments/visorando/"):
+    def __init__(self,loss_list : list[str], batch_size_list:list[int], lr_list:list[float], epochs_list:list[int],  output_dir="./experiments/visorando/", px_size:float=2.7):
         self.loss_list = loss_list
         self.batch_size_list = batch_size_list
         self.lr_list = lr_list
         self.epochs = epochs_list
-        self.output_dir = "./experiments/visorando/"
+        self.output_dir = output_dir
+        self.px_size = px_size
         os.makedirs(self.output_dir, exist_ok=True)
         self.base_config = self._get_base_config()
 
@@ -123,8 +126,7 @@ class ConfigGenerator:
             self._generate_single_config(loss, batch_size, lr, epoch)
 
     def _generate_single_config(self, loss, batch_size, lr, epoch):
-        lr_str = str(lr)[2:]
-        filename = f"{loss}_bs{batch_size}_lr{lr_str}_epch{epoch}.yaml"
+        filename = make_run_name(loss=loss, batch_size=batch_size, lr=lr, epoch=epoch, px_size=self.px_size) + ".yaml"
         filepath = os.path.join(self.output_dir, filename)
 
         config = copy.deepcopy(self.base_config)
@@ -134,20 +136,19 @@ class ConfigGenerator:
         config["TRAIN"]["LR"] = lr
         config["TRAIN"]["END_EPOCH"] = epoch
 
-        anciens_epochs = self._find_previous_epochs(loss, batch_size, lr_str, epoch)
+        anciens_epochs = self._find_previous_epochs(loss, batch_size, lr, epoch)
         if anciens_epochs:
-            config["TRAIN"]["RESUME"] = (
-                f"output/visorando/Visorando/{loss}_bs{batch_size}_lr{lr_str}_epch{max(anciens_epochs)}/"
-            )
+            config["TRAIN"]["RESUME"] = make_run_name(loss=loss, batch_size=batch_size, lr=lr, epoch=max(anciens_epochs), px_size=self.px_size)
+
 
         with open(filepath, "w") as f:
             yaml.dump(config, f, sort_keys=False)
 
         print(f"Fichier généré : {filepath}")
 
-    def _find_previous_epochs(self, loss, batch_size, lr_str, current_epoch):
+    def _find_previous_epochs(self, loss, batch_size, lr:float, current_epoch):
         pattern = os.path.join(
-            self.output_dir, f"{loss}_bs{batch_size}_lr{lr_str}_epch*.yaml"
+            self.output_dir, make_run_name(loss=loss, batch_size=batch_size, lr=lr, epoch=current_epoch, px_size=self.px_size) + "*.yaml"
         )
         anciens = []
         for f in glob.glob(pattern):

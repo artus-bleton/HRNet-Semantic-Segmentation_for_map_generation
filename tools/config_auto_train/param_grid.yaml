@@ -3,7 +3,7 @@
 loss_list:
     - tl
     - ftl
-    - di_tl
+    - dice
 
 batch_size_list:
     - 32
@@ -18,4 +18,5 @@ epochs:
     - 15
     - 20
     - 25
-    - 30
+
+px_size: 2
