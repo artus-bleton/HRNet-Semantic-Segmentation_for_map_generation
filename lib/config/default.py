@@ -140,6 +140,13 @@ _C.DEBUG.SAVE_BATCH_IMAGES_PRED = False
 _C.DEBUG.SAVE_HEATMAPS_GT = False
 _C.DEBUG.SAVE_HEATMAPS_PRED = False
 
+_C.IN_DATA = ""
+_C.OUT_DATA=""
+_C.MODEL_STATES=[]
+_C.DATA_NAME=""
+_C.LOG_FILE_NAME=""
+_C.MODEL_CONFIG=""
+
 
 def update_config(cfg, args):
     cfg.defrost()

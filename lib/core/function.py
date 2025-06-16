@@ -313,7 +313,7 @@ def pred(config, test_dataset, testloader, model,
 
 
             if sv_pred:
-                sv_path = os.path.join(sv_dir, 'test_results')
+                sv_path = os.path.join(sv_dir, 'predictions')
                 if not os.path.exists(sv_path):
                     os.mkdir(sv_path)
                 test_dataset.save_pred(pred, sv_path, name)

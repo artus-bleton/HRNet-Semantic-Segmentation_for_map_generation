@@ -331,7 +331,6 @@ def main():
     # ---------------------
     # Train resume
     # ---------------------
-
     if config.TRAIN.RESUME != "":
         model_state_file = os.path.join(config.TRAIN.RESUME,
                                         'checkpoint.pth.tar')
