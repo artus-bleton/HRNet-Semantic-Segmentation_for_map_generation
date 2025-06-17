@@ -103,7 +103,7 @@ TRAIN:
   SHUFFLE: true
   BEGIN_EPOCH: 0
   END_EPOCH: 15
-  RESUME: ''
+  RESUME: pxs2_dice_bs32_lr0005_epch10
   OPTIMIZER: sgd
   LR: 0.0005
   WD: 0.0005

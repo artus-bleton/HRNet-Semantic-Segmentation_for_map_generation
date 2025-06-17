@@ -3,6 +3,7 @@ import yaml
 import itertools
 import copy
 import glob
+import re
 
 from .naming import make_run_name
 
@@ -146,16 +147,18 @@ class ConfigGenerator:
 
         print(f"Fichier généré : {filepath}")
 
-    def _find_previous_epochs(self, loss, batch_size, lr:float, current_epoch):
-        pattern = os.path.join(
-            self.output_dir, make_run_name(loss=loss, batch_size=batch_size, lr=lr, epoch=current_epoch, px_size=self.px_size) + "*.yaml"
-        )
+    def _find_previous_epochs(self, loss, batch_size, lr: float, current_epoch: int):
+        # Obtenir le préfixe sans epoch
+        prefix = make_run_name(loss, batch_size, lr, epoch=None, px_size=self.px_size)
+        pattern = re.compile(rf"^{re.escape(prefix)}_epch(\d+)\.yaml$")
+
         anciens = []
-        for f in glob.glob(pattern):
-            try:
-                e = int(os.path.basename(f).split("_epch")[1].split(".")[0])
+
+        for fname in os.listdir(self.output_dir):
+            match = pattern.match(fname)
+            if match:
+                e = int(match.group(1))
                 if e < current_epoch:
                     anciens.append(e)
-            except Exception:
-                pass
+
         return anciens
