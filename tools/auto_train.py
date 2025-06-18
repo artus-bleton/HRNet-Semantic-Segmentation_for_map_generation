@@ -24,6 +24,7 @@ batch_size_list = param_grid["batch_size_list"]
 lr_list = param_grid["lr_list"]
 epochs = param_grid["epochs"]
 px_size = param_grid["px_size"]
+print(px_size)
 
 # Creation des fichiers YAML
 cfg_gen = ConfigGenerator(
@@ -31,7 +32,7 @@ cfg_gen = ConfigGenerator(
     batch_size_list=batch_size_list,
     lr_list=lr_list,
     epochs_list=epochs,
-    px_size=2
+    px_size=px_size
 )
 cfg_gen.generate_configs()
 
@@ -40,10 +41,10 @@ cfg_gen.generate_configs()
 train_script = "python3 tools/train.py"  # à adapter si besoin
 
 # boucle sur toutes les combinaisons
-for loss, batch_size, lr, epoch in itertools.product(loss_list, batch_size_list, lr_list, epochs):
+for loss, batch_size, lr, epoch, pxs in itertools.product(loss_list, batch_size_list, lr_list, epochs, px_size):
 
     lr_str = str(lr)[2:]
-    config_name = make_run_name(loss=loss, batch_size=batch_size, lr=lr, epoch=epoch, px_size=px_size) + ".yaml"
+    config_name = make_run_name(loss=loss, batch_size=batch_size, lr=lr, epoch=epoch, px_size=pxs) + ".yaml"
 
     cmd = f"{train_script} --cfg experiments/visorando/{config_name}"
 

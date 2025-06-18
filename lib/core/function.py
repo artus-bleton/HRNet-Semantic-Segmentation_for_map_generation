@@ -280,24 +280,12 @@ def pred(config, test_dataset, testloader, model,
                 scales=config.TEST.SCALE_LIST,
                 flip=False)
 
-            # --- LOGITS STATS PAR CLASSE ---
-            print("[DEBUG/function.py] -> pred (logits) stats :")
-            print("  shape        :", pred.shape)
-            print("  classe 0 - min :", pred[:, 0, :, :].min().item(),
-                  ", max :", pred[:, 0, :, :].max().item(),
-                  ", mean :", pred[:, 0, :, :].mean().item(),
-                  ", std :", pred[:, 0, :, :].std().item())
-            print("  classe 1 - min :", pred[:, 1, :, :].min().item(),
-                  ", max :", pred[:, 1, :, :].max().item(),
-                  ", mean :", pred[:, 1, :, :].mean().item(),
-                  ", std :", pred[:, 1, :, :].std().item())
+
 
             # --- PREDICTED CLASSES ---
             pred_classes = torch.argmax(pred, dim=1)  # shape [B, H, W]
             unique_pred, count_pred = np.unique(pred_classes.cpu().numpy(), return_counts=True)
-            print("[DEBUG/function.py] -> val in pred  :", dict(zip(unique_pred, count_pred)), "\n\n")
 
-            print("pred : ", pred.size())
 
 
 

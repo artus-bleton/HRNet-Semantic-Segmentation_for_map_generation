@@ -24,23 +24,24 @@ batch_size_list = param_grid["batch_size_list"]
 lr_list = param_grid["lr_list"]
 epochs = param_grid["epochs"]
 px_size = param_grid["px_size"]
+state = param_grid["state_type"]
 
 # Création du dossier de destination
 os.makedirs(args.output, exist_ok=True)
 
 # Pour chaque combinaison de paramètres
-for loss, batch_size, lr, epoch in itertools.product(loss_list, batch_size_list, lr_list, epochs):
-    run_name = make_run_name(loss=loss, batch_size=batch_size, lr=lr, epoch=epoch, px_size=px_size)
+for loss, batch_size, lr, epoch, pxs in itertools.product(loss_list, batch_size_list, lr_list, epochs, px_size):
+    run_name = make_run_name(loss=loss, batch_size=batch_size, lr=lr, epoch=epoch, px_size=pxs)
     model_folder = os.path.join(args.root, run_name)
-    model_path = os.path.join(model_folder, "final_state.pth")
-    dest_path = os.path.join(args.output, f"{run_name}.pth")
+    model_path = os.path.join(model_folder, state)
+    dest_path = os.path.join(args.output, f"{run_name}_{state}")
 
     if os.path.exists(dest_path):
-        print(f"⏭️  Déjà présent, ignoré : {dest_path}")
+        print(f"Déjà présent, ignoré : {dest_path}")
         continue
 
     if os.path.isfile(model_path):
         shutil.copy(model_path, dest_path)
-        print(f"✅ Copié : {model_path} -> {dest_path}")
+        print(f"Copié : {model_path} -> {dest_path}")
     else:
-        print(f"⚠️  Fichier manquant : {model_path}")
+        print(f"Fichier manquant : {model_path}")

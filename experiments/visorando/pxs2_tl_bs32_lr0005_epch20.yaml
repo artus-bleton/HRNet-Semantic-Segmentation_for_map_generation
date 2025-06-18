@@ -11,8 +11,8 @@ PRINT_FREQ: 10
 DATASET:
   DATASET: Visorando
   ROOT: data/
-  TRAIN_SET: list/visorando/train.lst
-  TEST_SET: list/visorando/val.lst
+  TRAIN_SET: list/visorando20/train.lst
+  TEST_SET: list/visorando20/val.lst
   NUM_CLASSES: 2
   IGNORE_LABEL: -1
   BASE_SIZE: 320
@@ -103,7 +103,7 @@ TRAIN:
   SHUFFLE: true
   BEGIN_EPOCH: 0
   END_EPOCH: 20
-  RESUME: pxs2_tl_bs32_lr0005_epch15
+  RESUME: output/visorando/Visorando/pxs2_tl_bs32_lr0005_epch15/
   OPTIMIZER: sgd
   LR: 0.0005
   WD: 0.0005

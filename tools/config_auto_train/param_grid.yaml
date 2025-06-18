@@ -1,8 +1,8 @@
 # param_grid.yaml
 
+state_type: final_state.pth
+
 loss_list:
-    - tl
-    - ftl
     - dice
 
 batch_size_list:
@@ -15,8 +15,12 @@ lr_list:
 # because the 20 epochs training uses the 10 epoch training's model as starting model
 epochs:
     - 10
-    - 15
     - 20
-    - 25
+    - 30
+    - 40
 
-px_size: 2
+# must be floats
+px_size:
+    - 1.5
+    - 2.5
+    - 3.0

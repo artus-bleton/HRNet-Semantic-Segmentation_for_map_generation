@@ -4,7 +4,7 @@ def make_run_name(loss: str, batch_size: int, lr: float, epoch: int | None, px_s
     """
     lr_str = str(lr).replace('0.', '')
 
-    name = f"pxs{px_size}_{loss}_bs{batch_size}_lr{lr_str}"
+    name = f"pxs{int(px_size * 10)}_{loss}_bs{batch_size}_lr{lr_str}"
     if epoch is not None:
         name += f"_epch{epoch}"
     return name

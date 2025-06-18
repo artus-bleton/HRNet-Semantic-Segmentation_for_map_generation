@@ -8,7 +8,7 @@ import re
 from .naming import make_run_name
 
 class ConfigGenerator:
-    def __init__(self,loss_list : list[str], batch_size_list:list[int], lr_list:list[float], epochs_list:list[int],  output_dir="./experiments/visorando/", px_size:float=2.7):
+    def __init__(self, px_size:list[float],loss_list : list[str], batch_size_list:list[int], lr_list:list[float], epochs_list:list[int],  output_dir="./experiments/visorando/", ):
         self.loss_list = loss_list
         self.batch_size_list = batch_size_list
         self.lr_list = lr_list
@@ -121,13 +121,13 @@ class ConfigGenerator:
         }
 
     def generate_configs(self):
-        for loss, batch_size, lr, epoch in itertools.product(
-            self.loss_list, self.batch_size_list, self.lr_list, self.epochs
+        for loss, batch_size, lr, epoch, px_size in itertools.product(
+            self.loss_list, self.batch_size_list, self.lr_list, self.epochs, self.px_size
         ):
-            self._generate_single_config(loss, batch_size, lr, epoch)
+            self._generate_single_config(loss, batch_size, lr, epoch, px_size)
 
-    def _generate_single_config(self, loss, batch_size, lr, epoch):
-        filename = make_run_name(loss=loss, batch_size=batch_size, lr=lr, epoch=epoch, px_size=self.px_size) + ".yaml"
+    def _generate_single_config(self, loss, batch_size, lr, epoch, px_size):
+        filename = make_run_name(loss=loss, batch_size=batch_size, lr=lr, epoch=epoch, px_size=px_size) + ".yaml"
         filepath = os.path.join(self.output_dir, filename)
 
         config = copy.deepcopy(self.base_config)
@@ -136,10 +136,12 @@ class ConfigGenerator:
         config["TEST"]["BATCH_SIZE_PER_GPU"] = batch_size
         config["TRAIN"]["LR"] = lr
         config["TRAIN"]["END_EPOCH"] = epoch
+        config["DATASET"]["TRAIN_SET"] = f"list/visorando{int(px_size * 10)}/train.lst"
+        config["DATASET"]['TEST_SET'] = f"list/visorando{int(px_size * 10)}/val.lst"
 
-        anciens_epochs = self._find_previous_epochs(loss, batch_size, lr, epoch)
+        anciens_epochs = self._find_previous_epochs(loss, batch_size, lr, epoch, px_size)
         if anciens_epochs:
-            config["TRAIN"]["RESUME"] = make_run_name(loss=loss, batch_size=batch_size, lr=lr, epoch=max(anciens_epochs), px_size=self.px_size)
+            config["TRAIN"]["RESUME"] = "output/visorando/Visorando/" + make_run_name(loss=loss, batch_size=batch_size, lr=lr, epoch=max(anciens_epochs), px_size=px_size) + "/"
 
 
         with open(filepath, "w") as f:
@@ -147,9 +149,9 @@ class ConfigGenerator:
 
         print(f"Fichier généré : {filepath}")
 
-    def _find_previous_epochs(self, loss, batch_size, lr: float, current_epoch: int):
+    def _find_previous_epochs(self, loss, batch_size, lr: float, current_epoch: int, px_size:float):
         # Obtenir le préfixe sans epoch
-        prefix = make_run_name(loss, batch_size, lr, epoch=None, px_size=self.px_size)
+        prefix = make_run_name(loss, batch_size, lr, epoch=None, px_size=px_size)
         pattern = re.compile(rf"^{re.escape(prefix)}_epch(\d+)\.yaml$")
 
         anciens = []
