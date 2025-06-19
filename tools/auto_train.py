@@ -24,16 +24,53 @@ batch_size_list = param_grid["batch_size_list"]
 lr_list = param_grid["lr_list"]
 epochs = param_grid["epochs"]
 px_size = param_grid["px_size"]
-print(px_size)
 
+if "tl" in loss_list:
+    alpha = param_grid["alpha"]
+    beta = param_grid["beta"]
+
+    cfg_gen = ConfigGenerator(
+        loss_list=loss_list,
+        batch_size_list=batch_size_list,
+        lr_list=lr_list,
+        epochs_list=epochs,
+        px_size=px_size,
+        alpha = alpha,
+        beta = beta
+    )
+
+if "ftl" in loss_list:
+    alpha = param_grid["alpha"]
+    beta = param_grid["beta"]
+    gamma = param_grid["gamma"]
+    cfg_gen = ConfigGenerator(
+        loss_list=loss_list,
+        batch_size_list=batch_size_list,
+        lr_list=lr_list,
+        epochs_list=epochs,
+        px_size=px_size,
+        alpha = alpha,
+        beta = beta,
+        gamma = gamma
+    )
+
+else :
 # Creation des fichiers YAML
-cfg_gen = ConfigGenerator(
-    loss_list=loss_list,
-    batch_size_list=batch_size_list,
-    lr_list=lr_list,
-    epochs_list=epochs,
-    px_size=px_size
-)
+    cfg_gen = ConfigGenerator(
+        loss_list=loss_list,
+        batch_size_list=batch_size_list,
+        lr_list=lr_list,
+        epochs_list=epochs,
+        px_size=px_size,
+        alpha = None,
+        beta = None,
+        gamma = None
+    )
+
+
+
+
+
 cfg_gen.generate_configs()
 
 

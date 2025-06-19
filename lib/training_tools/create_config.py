@@ -8,13 +8,16 @@ import re
 from .naming import make_run_name
 
 class ConfigGenerator:
-    def __init__(self, px_size:list[float],loss_list : list[str], batch_size_list:list[int], lr_list:list[float], epochs_list:list[int],  output_dir="./experiments/visorando/", ):
+    def __init__(self, px_size:list[float],loss_list : list[str], batch_size_list:list[int], lr_list:list[float], epochs_list:list[int],alpha:float, beta:float, gamma:float,  output_dir="./experiments/visorando/" ):
         self.loss_list = loss_list
         self.batch_size_list = batch_size_list
         self.lr_list = lr_list
         self.epochs = epochs_list
         self.output_dir = output_dir
         self.px_size = px_size
+        self.alpha = alpha
+        self.beta = beta
+        self.gamma = gamma
         os.makedirs(self.output_dir, exist_ok=True)
         self.base_config = self._get_base_config()
 
@@ -88,6 +91,9 @@ class ConfigGenerator:
             },
             "LOSS": {
                 "TYPE": "di_tl",
+                "ALPHA": 0.5,
+                "BETA": 0.5,
+                "GAMMA": 0.5,
                 "LBD": 0.002,
                 "BALANCE_WEIGHTS": [1],
             },

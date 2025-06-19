@@ -1,4 +1,4 @@
-def make_run_name(loss: str, batch_size: int, lr: float, epoch: int | None, px_size: float = 2.7) -> str:
+def make_run_name(loss: str, batch_size: int, lr: float, epoch: int | None, px_size: float ) -> str:
     """
     Génère un nom de run. Si epoch est None, retourne le préfixe jusqu'au lr.
     """

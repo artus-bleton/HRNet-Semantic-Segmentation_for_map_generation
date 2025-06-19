@@ -51,6 +51,9 @@ _C.LOSS = CN()
 _C.LOSS.TYPE = "dice"
 _C.LOSS.BALANCE_WEIGHTS = [0.5, 0.5]
 _C.LOSS.LBD = 0.0025
+_C.LOSS.ALPHA = 0.5
+_C.LOSS.BETA = 0.5
+_C.LOSS.GAMMA = 0.5
 
 
 # DATASET related params

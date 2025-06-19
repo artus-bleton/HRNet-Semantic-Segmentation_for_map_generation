@@ -14,7 +14,6 @@ lr_list:
 # Must be in order (VERY IMPORTANT)
 # because the 20 epochs training uses the 10 epoch training's model as starting model
 epochs:
-    - 10
     - 20
     - 30
     - 40
@@ -23,4 +22,3 @@ epochs:
 px_size:
     - 1.5
     - 2.5
-    - 3.0

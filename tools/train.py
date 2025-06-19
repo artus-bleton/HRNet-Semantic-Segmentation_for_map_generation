@@ -15,6 +15,8 @@ import time
 import timeit
 from pathlib import Path
 
+from PIL.Image import alpha_composite
+
 import numpy as np
 np.int = int
 
@@ -255,13 +257,18 @@ def main():
     elif config.LOSS.TYPE == 'tl':
         criterion = TverskyLoss(
             ignore_label=config.TRAIN.IGNORE_LABEL,
-            weight=config.LOSS.BALANCE_WEIGHTS
+            weight=config.LOSS.BALANCE_WEIGHTS,
+            alpha=config.LOSS.ALPHA,
+            beta=config.LOSS.BETA
         )
 
     elif config.LOSS.TYPE == 'ftl':
         criterion = FocalTverskyLoss(
             ignore_label=config.TRAIN.IGNORE_LABEL,
-            weight=config.LOSS.BALANCE_WEIGHTS
+            weight=config.LOSS.BALANCE_WEIGHTS,
+            alpha=config.LOSS.ALPHA,
+            beta=config.LOSS.BETA,
+            gamma=config.LOSS.GAMMA
         )
 
     # Recommended for fine-tuning on fine-seg
